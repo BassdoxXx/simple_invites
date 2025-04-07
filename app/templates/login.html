@@ -1,0 +1,16 @@
+{% extends "layout_admin.html" %}
+
+{% block admin_content %}
+<h2 class="text-xl font-bold mb-4 text-center">🔐 Admin Login</h2>
+<form method="POST" class="space-y-4 max-w-sm mx-auto">
+    <div>
+        <input type="text" name="username" placeholder="Benutzername" required class="w-full p-2 border rounded">
+    </div>
+    <div>
+        <input type="password" name="password" placeholder="Passwort" required class="w-full p-2 border rounded">
+    </div>
+    <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 w-full">
+        Login
+    </button>
+</form>
+{% endblock %}

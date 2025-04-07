@@ -1,0 +1,11 @@
+{% extends "layout_base.html" %}
+
+{% block navigation %}
+<!-- Gäste sehen keine Navigation -->
+{% endblock %}
+
+{% block content %}
+<main class="max-w-xl mx-auto mt-12 bg-white shadow-lg rounded-xl p-8">
+    {% block guest_content %}{% endblock %}
+</main>
+{% endblock %}

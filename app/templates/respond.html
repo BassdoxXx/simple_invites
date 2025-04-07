@@ -1,0 +1,48 @@
+{% extends "layout_guest.html" %}
+
+{% block title %}Einladung beantworten{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">🎉 Einladung zum 150 jährigen Bestehen der <strong>FF Windischletten</strong></h1>
+<br>
+<p class="mb-6 text-gray-700">
+    Liebe <strong>{{ invite.verein }}</strong>,<br>
+    Ihr könnt hier eure Teilnahme an unserem 150 jährigen Feuerwehrfest bestätigen –
+    und eure Angaben <strong>jederzeit bis zwei Tage vor dem Fest</strong> ändern.
+</p>
+
+<form method="POST" class="space-y-6">
+    <div>
+        <label class="block font-medium mb-1">Kommt ihr?</label>
+        <select name="attending" required class="w-full p-2 border rounded">
+            <option value="" disabled {% if not response %}selected{% endif %}>Bitte auswählen</option>
+            <option value="yes" {% if response and response.attending == 'yes' %}selected{% endif %}>Ja</option>
+            <option value="no" {% if response and response.attending == 'no' %}selected{% endif %}>Nein</option>
+        </select>
+    </div>
+
+    <div>
+        <label class="block font-medium mb-1">Wie viele Personen?</label>
+        <input type="number" name="persons" min="1" max="100"
+               class="w-full p-2 border rounded"
+               value="{{ response.persons if response else '' }}">
+    </div>
+
+    <div>
+        <label class="block font-medium mb-1">Getränkewunsch (optional)</label>
+        <textarea name="drinks" class="w-full p-2 border rounded"
+                  maxlength="200"
+                  placeholder="z. B. 2 Kisten Spezi, 1 Fass Bier">{{ response.drinks if response else '' }}</textarea>
+    </div>
+
+    <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
+        Antwort absenden
+    </button>
+</form>
+
+{% if not response %}
+<p class="mt-6 text-sm text-blue-700 text-center italic">
+    Du kannst deine Antwort später jederzeit erneut ändern – bis zwei Tage vor dem Fest.
+</p>
+{% endif %}
+{% endblock %}

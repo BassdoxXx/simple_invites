@@ -1,0 +1,31 @@
+{% extends "layout_admin.html" %}
+
+{% block title %}WhatsApp Einstellungen{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto mt-12 bg-white shadow-lg rounded-xl p-8">
+  <h1 class="text-2xl font-bold mb-4">🔔 WhatsApp Benachrichtigung</h1>
+  <p class="text-sm text-gray-600 mb-4">
+    Hinweis: Wenn du kein WhatsApp nutzen möchtest, kannst du die Felder leer lassen.
+    In diesem Fall wird keine Nachricht verschickt.
+  </p>
+
+  <form method="POST" class="space-y-6">
+    <div>
+      <label class="block font-medium mb-1">WhatsApp-Nummer (mit +49)</label>
+      <input type="text" name="phone" class="w-full p-2 border rounded" required value="{{ phone or '' }}">
+    </div>
+    <div>
+      <label class="block font-medium mb-1">API Key</label>
+      <input type="text" name="apikey" class="w-full p-2 border rounded" required value="{{ apikey or '' }}">
+    </div>
+    <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
+      Speichern
+    </button>
+  </form>
+
+  <div class="mt-6">
+    <a href="{{ url_for('admin') }}" class="text-blue-600 underline">&larr; Zurück zur Übersicht</a>
+  </div>
+</div>
+{% endblock %}

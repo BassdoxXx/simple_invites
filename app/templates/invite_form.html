@@ -1,0 +1,37 @@
+{% extends "layout_admin.html" %}
+
+{% block title %}Neue Einladung erstellen{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white shadow-lg rounded-xl p-8 mt-6">
+    <h1 class="text-2xl font-bold mb-4">➕ Neue Einladung erstellen</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="mb-4 p-3 rounded bg-green-100 text-green-800">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('new_invite') }}" class="space-y-6">
+        <div>
+            <label class="block font-medium mb-1">Name der Feuerwehr</label>
+            <input type="text" name="verein" required class="w-full p-2 border rounded">
+        </div>
+        <div>
+            <label class="block font-medium mb-1">Adresse (optional)</label>
+            <input type="text" name="adresse" class="w-full p-2 border rounded">
+        </div>
+        <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
+            Einladung erstellen
+        </button>
+    </form>
+
+    <div class="mt-6 text-center">
+        <a href="{{ url_for('admin') }}" class="text-blue-600 hover:underline">&larr; Zurück zur Übersicht</a>
+    </div>
+</div>
+{% endblock %}
