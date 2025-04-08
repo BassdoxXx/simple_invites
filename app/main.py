@@ -11,7 +11,13 @@ import uuid
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 db_path = os.path.join(BASE_DIR, '..', 'data', 'simple_invites.db')
 
+
 def create_app(testing=False):
+    """
+    Erstellt und konfiguriert eine neue Flask-App-Instanz.
+    Falls testing=True, wird eine In-Memory-SQLite-Datenbank genutzt.
+    Diese Trennung erlaubt einfaches Testen ohne lokale Datei.
+    """
     app = Flask(__name__)
     if testing:
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
@@ -20,10 +26,10 @@ def create_app(testing=False):
 
     app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", "changeme123")
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['HOSTNAME'] = os.environ.get("APP_HOSTNAME", "http://localhost:5000")
 
     db.init_app(app)
 
-    # 🔒 Login-Manager einbinden
     login_manager = LoginManager()
     login_manager.login_view = "login"
     login_manager.init_app(app)
@@ -50,11 +56,10 @@ def create_app(testing=False):
                     db.create_all()
                     print("✅ Tabellen ergänzt.")
 
-            # Admin-User anlegen, falls keiner existiert
             if User.query.count() == 0:
                 default_pw = "admin123"
                 admin = User(username="admin")
-                admin.set_password(default_pw)  # <-- sichert Hash korrekt ab
+                admin.set_password(default_pw)
                 admin.force_password_change = True
                 db.session.add(admin)
                 db.session.commit()
@@ -65,18 +70,34 @@ def create_app(testing=False):
 
 app = create_app()
 
+
 @app.route("/")
 def index():
-    return redirect(url_for("admin"))
+    return render_template("token_input.html")
+
+
+@app.route("/find", methods=["POST"])
+def find_token():
+    token = request.form.get("token")
+    if token:
+        return redirect(url_for("respond", token=token))
+    flash("Bitte einen gültigen Token eingeben.", "danger")
+    return redirect(url_for("index"))
+
 
 @app.before_request
 def enforce_password_change():
+    """
+    Erzwingt eine Passwortänderung beim ersten Login. 
+    Leitet zu /change-password um, wenn force_password_change aktiv ist.
+    """
     if current_user.is_authenticated:
         if current_user.force_password_change:
             allowed_endpoints = ["change_password", "logout", "static"]
             if request.endpoint not in allowed_endpoints:
                 return redirect(url_for("change_password"))
-            
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -91,6 +112,7 @@ def login():
         flash("Login fehlgeschlagen", "danger")
     return render_template("login.html")
 
+
 @app.route("/logout")
 @login_required
 def logout():
@@ -98,9 +120,13 @@ def logout():
     flash("Erfolgreich abgemeldet", "success")
     return redirect(url_for("login"))
 
+
 @app.route("/admin/change-password", methods=["GET", "POST"])
 @login_required
 def change_password():
+    """
+    Formular zur Passwortänderung, insbesondere für den ersten Login.
+    """
     if request.method == "POST":
         pw1 = request.form.get("new_password")
         pw2 = request.form.get("confirm_password")
@@ -109,8 +135,7 @@ def change_password():
             flash("Die Passwörter stimmen nicht überein.", "danger")
             return render_template("change_password.html")
 
-        # 💥 Der Fehler war hier, falls bcrypt verwendet wurde!
-        current_user.set_password(pw1)  # <--- nutzt werkzeug.generate_password_hash
+        current_user.set_password(pw1)
         current_user.force_password_change = False
         db.session.commit()
         flash("Passwort geändert", "success")
@@ -118,38 +143,61 @@ def change_password():
 
     return render_template("change_password.html")
 
+
 @app.route("/admin")
 @login_required
 def admin():
+    """
+    Admin-Startseite: Zeigt Einladungen, Rückmeldungen und Gästeübersicht.
+    """
     invites = Invite.query.all()
     responses = {r.token: r for r in Response.query.all()}
+    response_count = len(responses)
+    total_invites = len(invites)
+
+    total_persons = sum(
+        r.persons for r in responses.values()
+        if r.attending == 'yes' and r.persons
+    )
 
     phone = Setting.query.filter_by(key="whatsapp_phone").first()
     apikey = Setting.query.filter_by(key="whatsapp_apikey").first()
-
     whatsapp_active = phone and apikey and phone.value and apikey.value
-    return render_template("admin.html", invites=invites, responses=responses, whatsapp_active=whatsapp_active)
+
+    return render_template(
+        "admin.html",
+        invites=invites,
+        responses=responses,
+        whatsapp_active=whatsapp_active,
+        response_count=response_count,
+        total_invites=total_invites,
+        total_persons=total_persons
+    )
+
 
 @app.route("/admin/create", methods=["GET"])
 @login_required
 def create_invite():
     return render_template("invite_form.html")
 
+
 @app.route("/admin/create", methods=["POST"])
 @login_required
 def new_invite():
+    """
+    Legt neue Einladung an. Optional kann ein bestehender Token übergeben werden,
+    falls z.  eine Einladung gelöscht und erneut erstellt werden muss.
+    """
     verein = request.form.get("verein")
-    adresse = request.form.get("adresse")
-    if adresse and len(adresse) > 200:
-        flash("Die Adresse darf maximal 200 Zeichen lang sein.", "danger")
-        return render_template("invite_form.html")
-    token = str(uuid.uuid4())
-    link = url_for("respond", token=token, _external=True)
+    adresse = request.form.get("adresse")  # wird ggf. als Token interpretiert
+
+    token = adresse.strip() if adresse else uuid.uuid4().hex[:10]
+    link = f"{app.config['HOSTNAME']}/respond/{token}"
     qr_path = generate_qr(link, token)
 
     invite = Invite(
         verein=verein,
-        adresse=adresse,
+        adresse="",  # wird nicht verwendet
         token=token,
         link=link,
         qr_code_path=qr_path,
@@ -160,11 +208,42 @@ def new_invite():
     flash("Einladung erstellt", "success")
     return redirect(url_for("admin"))
 
+
+@app.route("/admin/delete/<token>", methods=["POST"])
+@login_required
+def delete_invite(token):
+    """
+    Löscht eine bestehende Einladung und ggf. die zugehörige Antwort.
+    Löscht zusätzlich den zugehörigen QR-Code vom Dateisystem.
+    """
+    invite = Invite.query.filter_by(token=token).first()
+    response = Response.query.filter_by(token=token).first()
+
+    if invite:
+        try:
+            qr_path = os.path.join(BASE_DIR, 'static', 'qrcodes', os.path.basename(invite.qr_code_path))
+            if os.path.exists(qr_path):
+                os.remove(qr_path)
+        except Exception as e:
+            print(f"⚠️ QR-Code konnte nicht gelöscht werden: {e}")
+        db.session.delete(invite)
+    if response:
+        db.session.delete(response)
+
+    db.session.commit()
+    flash("Einladung gelöscht", "success")
+    return redirect(url_for("admin"))
+
+
 @app.route("/admin/settings", methods=["GET", "POST"])
 @login_required
 def admin_settings():
+    """
+    Ermöglicht dem Admin, API-Zugangsdaten für WhatsApp zu speichern.
+    """
     phone_setting = Setting.query.filter_by(key="whatsapp_phone").first()
     apikey_setting = Setting.query.filter_by(key="whatsapp_apikey").first()
+    whatsapp_active = phone_setting and apikey_setting and phone_setting.value and apikey_setting.value
 
     if request.method == "POST":
         phone = request.form.get("phone")
@@ -186,11 +265,16 @@ def admin_settings():
 
     return render_template("admin_settings.html",
                            phone=phone_setting.value if phone_setting else "",
-                           apikey=apikey_setting.value if apikey_setting else "")
+                           apikey=apikey_setting.value if apikey_setting else "",
+                           whatsapp_active=whatsapp_active)
 
 
 @app.route("/respond/<token>", methods=["GET", "POST"])
 def respond(token):
+    """
+    Öffentlich zugängliches Formular zum Antworten auf eine Einladung.
+    Ermöglicht Änderungen bis kurz vor dem Event.
+    """
     invite = Invite.query.filter_by(token=token).first()
     if not invite:
         return "Ungültiger Link", 404
@@ -200,13 +284,10 @@ def respond(token):
     if request.method == "POST":
         try:
             attending = request.form.get("attending")
-            persons_raw = request.form.get("persons", "0")
-
             persons = int(request.form.get("persons", 0))
             if persons < 1 or persons > 100:
                 flash("Die Anzahl der Personen muss zwischen 1 und 100 liegen.", "danger")
                 return render_template("respond.html", invite=invite, response=response)
-
 
             drinks = request.form.get("drinks", "")
 

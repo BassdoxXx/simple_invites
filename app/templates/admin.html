@@ -1,43 +1,53 @@
 {% extends "layout_admin.html" %}
-
 {% block title %}Adminbereich{% endblock %}
 
-{% block content %}
-<h1 class="text-3xl font-bold mb-6">👨‍🚒 Admin – Einladungen verwalten</h1>
-
-{% if whatsapp_active %}
-  <p class="mb-4 p-3 rounded bg-green-100 text-green-800">
-    ✅ WhatsApp-Benachrichtigung ist aktiviert
-  </p>
-{% else %}
-  <p class="mb-4 p-3 rounded bg-yellow-100 text-yellow-800">
-    ⚠️ WhatsApp-Benachrichtigung ist derzeit deaktiviert
-  </p>
-{% endif %}
+{% block admin_content %}
+<h1 class="text-3xl font-bold mb-6">Einladungen verwalten</h1>
 
 <form method="POST" action="{{ url_for('new_invite') }}" class="mb-8 bg-white p-6 rounded shadow">
   <h2 class="text-xl font-semibold mb-4">➕ Neue Einladung erstellen</h2>
   <div class="grid md:grid-cols-2 gap-4">
-    <input type="text" name="verein" placeholder="Name der Feuerwehr" required class="p-2 border rounded w-full">
-    <input type="text" name="adresse" maxlength="200" placeholder="Adresse (optional)" class="p-2 border rounded w-full">
+    <input type="text" name="verein" placeholder="Name der Feuerwehr" required class="p-2 border rounded w-full" />
+    <input type="text" name="adresse" maxlength="200" placeholder="Token (optional)" class="p-2 border rounded w-full" />
   </div>
   <button type="submit" class="mt-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
     Einladung erstellen
   </button>
 </form>
 
-<div class="overflow-auto">
-  <table class="w-full text-left bg-white rounded shadow">
+<div class="flex justify-between items-center mb-4">
+  <h1 class="text-3xl font-bold">Gästeliste</h1>
+  <span class="text-3xl text-gray-700">
+    📬 Rückmeldungen: <strong>{{ response_count }}</strong> von <strong>{{ total_invites }}</strong> |
+    👥 Personen: <strong>{{ total_persons }}</strong>
+  </span>
+</div>
+
+<div class="mb-4">
+  <input
+    id="searchInput"
+    type="text"
+    placeholder="🔎 Nach Gast suchen..."
+    class="w-full p-2 border rounded"
+    onfocus="this.placeholder=''"
+    onblur="this.placeholder='🔎 Nach Gast suchen...'"
+    onkeyup="filterTable()"
+  />
+</div>
+
+<div class="overflow-x-auto w-full min-w-[1000px]">
+  <table class="min-w-full table-fixed text-left bg-white rounded shadow">
     <thead class="bg-gray-200">
       <tr>
-        <th class="p-3">Verein</th>
-        <th class="p-3">Adresse</th>
-        <th class="p-3">Link</th>
-        <th class="p-3">QR-Code</th>
-        <th class="p-3">Antwort</th>
-        <th class="p-3">Personen</th>
-        <th class="p-3">Getränke</th>
-        <th class="p-3">Zuletzt aktualisiert</th>
+        <th class="w-1/6 p-3">Gast</th>
+        <th class="w-1/5 p-3">Adresse</th>
+        <th class="w-1/5 p-3">Link</th>
+        <th class="w-1/6 p-3">QR-Code</th>
+        <th class="w-1/12 p-3">Antwort</th>
+        <th class="w-1/12 p-3">Personen</th>
+        <th class="w-1/6 p-3">Getränke</th>
+        <th class="w-1/6 p-3">Zuletzt aktualisiert</th>
+        <th class="w-1/12 p-3 text-center">🗑️</th>
       </tr>
     </thead>
     <tbody>
@@ -49,18 +59,48 @@
           <a href="{{ invite.link }}" class="text-blue-600 underline" target="_blank">Link öffnen</a>
         </td>
         <td class="p-3">
-          <img src="{{ url_for('static', filename=invite.qr_code_path.split('static/')[1]) }}" alt="QR" class="h-16">
+          <div class="h-16 w-16 flex items-center justify-center">
+            <img src="{{ url_for('static', filename=invite.qr_code_path.split('static/')[1]) }}" alt="QR" class="h-16 w-16 object-contain" />
+          </div>
         </td>
         {% set res = responses.get(invite.token) %}
-        <td class="p-3">{{ res.attending if res else "-" }}</td>
+        <td class="p-3 font-semibold">
+          {% if res %}
+            {% if res.attending == 'yes' %}
+              <span class="text-green-600">Ja</span>
+            {% elif res.attending == 'no' %}
+              <span class="text-red-600">Nein</span>
+            {% else %}
+              {{ res.attending }}
+            {% endif %}
+          {% else %}
+            -
+          {% endif %}
+        </td>
         <td class="p-3">{{ res.persons if res else "-" }}</td>
         <td class="p-3 text-sm">{{ res.drinks if res else "-" }}</td>
-        <td class="p-3 text-sm">
-          {{ res.timestamp.strftime('%d.%m.%Y %H:%M') if res else "-" }}
+        <td class="p-3 text-sm">{{ res.timestamp.strftime('%d.%m.%Y %H:%M') if res else "-" }}</td>
+        <td class="p-3 text-center">
+          <form method="POST" action="{{ url_for('delete_invite', token=invite.token) }}" onsubmit="return confirm('Einladung wirklich löschen?')">
+            <button type="submit" class="text-red-600 hover:text-red-800" title="Löschen">🗑️</button>
+          </form>
         </td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
+
+<script>
+  function filterTable() {
+    const input = document.getElementById("searchInput").value.toLowerCase();
+    const rows = document.querySelectorAll("table tbody tr");
+
+    rows.forEach((row) => {
+      const guestCell = row.querySelector("td:first-child");
+      const text = guestCell ? guestCell.textContent.toLowerCase() : "";
+      row.style.display = text.includes(input) ? "" : "none";
+    });
+  }
+</script>
 {% endblock %}

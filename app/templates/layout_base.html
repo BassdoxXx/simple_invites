@@ -10,9 +10,9 @@
 
   {% block navigation %}{% endblock %}
 
-  <div id="flash-container" class="max-w-2xl mx-auto mt-6">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div id="flash-container" class="max-w-2xl mx-auto mt-6">
         {% for category, message in messages %}
           <div class="flash {{ category }} p-4 mb-4 rounded text-white 
                       {% if category == 'success' %} bg-green-500 
@@ -21,19 +21,18 @@
             {{ message }}
           </div>
         {% endfor %}
-      {% endif %}
-    {% endwith %}
-  </div>
+      </div>
+      <script>
+        setTimeout(() => {
+          const flash = document.getElementById("flash-container");
+          if (flash) flash.style.display = "none";
+        }, 10000);
+      </script>
+    {% endif %}
+  {% endwith %}
 
   <main class="flex-grow max-w-7xl mx-auto p-4">
     {% block content %}{% endblock %}
   </main>
-
-  <script>
-    setTimeout(() => {
-      const flash = document.getElementById("flash-container");
-      if (flash) flash.style.display = "none";
-    }, 10000);
-  </script>
 </body>
 </html>
