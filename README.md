@@ -17,7 +17,7 @@
 1. **Clonen**:
 
 ```bash
-git clone https://github.com/dein-benutzername/simple_invites.git
+git clone https://github.com/BassdoxXx/simple_invites.git
 cd simple_invites
 ```
 
