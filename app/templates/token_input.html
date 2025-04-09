@@ -6,7 +6,7 @@
 <h1 class="text-2xl font-bold mb-4">🔑 Einladung aufrufen</h1>
 <p class="mb-6 text-gray-700">Bitte gib den Einladungscode (Token) ein, den du erhalten hast.</p>
 
-<form method="POST" action="{{ url_for('find_token') }}" class="space-y-4">
+<form method="POST" action="{{ url_for('public.find_token') }}" class="space-y-4">
   <input type="text" name="token" placeholder="Einladungscode eingeben..." required class="w-full p-2 border rounded">
   <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
     Einladung anzeigen

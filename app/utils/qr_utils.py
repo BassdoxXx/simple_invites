@@ -2,8 +2,8 @@ import os
 import qrcode
 
 # Basispfad des Projekts bestimmen
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-QR_DIR = os.path.join(BASE_DIR, 'static', 'qrcodes')
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+QR_DIR = os.path.join(BASE_DIR, 'app', 'static', 'qrcodes')
 
 def generate_qr(link, filename):
     """
@@ -16,10 +16,10 @@ def generate_qr(link, filename):
         filename (str): Der Dateiname (z.B. Token) unter dem der QR-Code gespeichert wird.
 
     Returns:
-        str: Relativer Pfad zur gespeicherten QR-Code-Datei für Flask (z.B. 'static/qrcodes/abc123').
+        str: Relativer Pfad zur gespeicherten QR-Code-Datei für Flask (z.B. 'qrcodes/abc123').
     """
     os.makedirs(QR_DIR, exist_ok=True)
     full_path = os.path.join(QR_DIR, filename)
     img = qrcode.make(link)
     img.save(full_path)
-    return f"static/qrcodes/{filename}"
+    return f"qrcodes/{filename}"

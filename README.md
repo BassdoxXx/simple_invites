@@ -11,6 +11,7 @@
 - Admin-Bereich mit Passwortschutz & Passwort-Änderung
 - Optional: WhatsApp-Benachrichtigung (via CallMeBot)
 - Vollständig in Docker oder lokal nutzbar
+- Übersichtliche Statistiken im Admin-Bereich (z. B. Anzahl der Zusagen)
 
 ## 🚀 Nutzung
 
@@ -37,20 +38,51 @@ python -m app.main
 - Login: `admin`
 - Passwort: `admin123` (beim ersten Login wird Änderung erzwungen)
 
+4. **Docker (optional)**:
+
+```bash
+docker build -t simple_invites .
+docker run -p 5000:5000 simple_invites
+```
+
 ## ⚙️ Ordnerstruktur
 
 ```
 simple_invites/
 │
 ├── app/
-│   ├── main.py              # Flask-Anwendung
+│   ├── __init__.py          # Flask-App-Setup
+│   ├── main.py              # Einstiegspunkt der Anwendung
 │   ├── models.py            # SQLAlchemy-Modelle
-│   ├── qr_utils.py          # QR-Code-Erzeugung
-│   └── templates/           # HTML-Templates (Tailwind)
+│   ├── blueprints/          # Flask-Blueprints (auth, admin, public)
+│   ├── utils/               # Hilfsfunktionen (QR-Code, Passwort-Logik)
+│   ├── templates/           # HTML-Templates (Tailwind)
+│   └── static/              # Statische Dateien (CSS, QR-Codes)
 │
-├── static/qrcodes/          # QR-Code Bilder
-└── data/simple_invites.db   # SQLite-Datenbank (beim ersten Start erstellt)
+├── data/simple_invites.db   # SQLite-Datenbank (wird beim ersten Start erstellt)
+├── requirements.txt         # Python-Abhängigkeiten
+└── Dockerfile               # Docker-Setup
 ```
+
+## 🛠️ Konfiguration
+
+- **WhatsApp-Benachrichtigungen**:
+  - Telefonnummer und API-Key in den Admin-Einstellungen hinterlegen.
+  - CallMeBot wird verwendet, um Nachrichten zu versenden.
+
+- **Passwortschutz**:
+  - Beim ersten Login wird eine Passwortänderung erzwungen.
+  - Passwörter werden sicher gehasht gespeichert.
+
+## 📖 Hinweise
+
+- **QR-Codes**:
+  - QR-Codes werden im Ordner `static/qrcodes/` gespeichert.
+  - Beim Löschen einer Einladung wird der zugehörige QR-Code automatisch entfernt.
+
+- **Datenbank**:
+  - Die SQLite-Datenbank wird automatisch im Ordner `data/` erstellt.
+  - Für produktive Umgebungen kann eine andere Datenbank (z. B. PostgreSQL) konfiguriert werden.
 
 ---
 
