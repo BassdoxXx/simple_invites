@@ -1,0 +1,21 @@
+{% extends "layout_base.html" %}
+
+{% block title %}Impressum{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white shadow-md rounded-lg p-6 mt-8">
+  <h1 class="text-3xl font-bold mb-4">Impressum</h1>
+  <p class="text-gray-700">
+    Dies ist eine Beispielseite für das Impressum. Die Inhalte müssen noch ergänzt werden.
+  </p>
+
+  <p class="mt-4 text-sm text-gray-500">
+    Angaben gemäß § 5 TMG folgen hier.
+  </p>
+
+  <div class="mt-6">
+    <a href="{{ url_for('index') }}" class="text-blue-600 hover:underline">&larr; Zurück zur Startseite</a>
+  </div>
+</div>
+{% endblock %}
+

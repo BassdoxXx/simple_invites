@@ -316,6 +316,14 @@ def respond(token):
 
     return render_template("respond.html", invite=invite, response=response)
 
+@app.route("/impressum")
+def legal_impressum():
+    return render_template("impressum.html")
+
+@app.route("/datenschutz")
+def legal_datenschutz():
+    return render_template("datenschutz.html")
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
