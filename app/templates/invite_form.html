@@ -1,10 +1,12 @@
 {% extends "layout_admin.html" %}
 
-{% block title %}Neue Einladung erstellen{% endblock %}
+{% block title %}Einladung erstellen oder bearbeiten{% endblock %}
 
 {% block content %}
 <div class="max-w-2xl mx-auto bg-white shadow-lg rounded-xl p-8 mt-6">
-    <h1 class="text-2xl font-bold mb-4">➕ Neue Einladung erstellen</h1>
+    <h1 class="text-2xl font-bold mb-4">
+        {% if invite %}✏️ Einladung bearbeiten{% else %}➕ Neue Einladung erstellen{% endif %}
+    </h1>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
@@ -16,21 +18,28 @@
       {% endif %}
     {% endwith %}
 
-    <form method="POST" action="{{ url_for('admin.new_invite') }}" class="space-y-6">
+    <form method="POST" action="{{ url_for('admin.create_or_edit_invite', invite_id=invite.id if invite else None) }}" class="space-y-6">
         <div>
-            <label class="block font-medium mb-1">Name der Feuerwehr</label>
-            <input type="text" name="verein" required class="w-full p-2 border rounded">
+            <label class="block font-medium mb-1">Name des Vereins</label>
+            <input type="text" name="verein" value="{{ invite.verein if invite else '' }}" required class="w-full p-2 border rounded">
         </div>
         <div>
+          <label class="block font-medium mb-1">Tischnummer (optional)</label>
+          <input type="text" name="tischnummer" value="{{ invite.tischnummer if invite else '' }}" class="w-full p-2 border rounded" placeholder="z.B. 1, 2, 3">
+          <p class="text-sm text-gray-500 mt-1">
+              Wenn keine Tischnummer angegeben wird, wird automatisch die nächste freie Tischnummer vergeben.
+          </p>
+      </div>
+        <div>
             <label class="block font-medium mb-1">Token (optional)</label>
-            <input type="text" name="adresse" class="w-full p-2 border rounded" placeholder="z. B. bestehender Token">
+            <input type="text" name="token" value="{{ invite.token if invite else '' }}" class="w-full p-2 border rounded" placeholder="z.B. bestehender Token">
             <p class="text-sm text-gray-500 mt-1">
-                Wenn du einen bestehenden Token erneut verwenden willst (z. B. nach Löschen),
+                Wenn du einen bestehenden Token erneut verwenden willst (z.B. nach Löschen),
                 gib ihn hier ein. Wird das Feld leer gelassen, wird ein neuer Token erzeugt.
             </p>
         </div>
         <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
-            Einladung erstellen
+            {% if invite %}Änderungen speichern{% else %}Einladung erstellen{% endif %}
         </button>
     </form>
 

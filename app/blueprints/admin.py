@@ -8,14 +8,11 @@ from datetime import datetime, timezone
 
 admin_bp = Blueprint("admin", __name__)
 
-@admin_bp.route("/")
+@admin_bp.route("/", methods=["GET", "POST"])
 @login_required
 def index():
     """
-    Displays the admin dashboard with all invites, responses, and statistics.
-
-    Returns:
-        Rendered HTML template for the admin dashboard.
+    Displays the admin dashboard with all invites and handles the creation or editing of invites.
     """
     invites = Invite.query.all()
     responses = {r.token: r for r in Response.query.all()}
@@ -28,6 +25,67 @@ def index():
     phone = Setting.query.filter_by(key="whatsapp_phone").first()
     apikey = Setting.query.filter_by(key="whatsapp_apikey").first()
     whatsapp_active = phone and apikey and phone.value and apikey.value
+
+    # Bearbeiten oder Erstellen einer Einladung
+    invite_id = request.args.get("invite_id")
+    invite = Invite.query.get(invite_id) if invite_id else None
+
+    if request.method == "POST":
+        verein = request.form.get("verein")
+        tischnummer = request.form.get("tischnummer")
+        token = request.form.get("token") or uuid.uuid4().hex[:10]  # Automatisch generieren, falls leer
+
+        # Validierung: Prüfen, ob der Name des Gastes bereits existiert
+        existing_name = Invite.query.filter(Invite.verein == verein, Invite.id != (invite.id if invite else None)).first()
+        if existing_name:
+            flash(f"Der Name '{verein}' wird bereits verwendet.", "danger")
+            return redirect(url_for("admin.index", invite_id=invite_id))
+
+        # Validierung: Prüfen, ob die Tischnummer bereits existiert
+        if tischnummer:
+            existing_tischnummer = Invite.query.filter(Invite.tischnummer == tischnummer, Invite.id != (invite.id if invite else None)).first()
+            if existing_tischnummer:
+                flash(f"Tischnummer {tischnummer} wird bereits verwendet.", "danger")
+                return redirect(url_for("admin.index", invite_id=invite_id))
+
+        # Wenn keine Tischnummer angegeben ist, finde die nächste freie Zahl
+        if not tischnummer:
+            # Alle bestehenden Tischnummern abrufen und sortieren
+            existing_tischnummern = sorted(int(i.tischnummer) for i in invites if i.tischnummer.isdigit())
+            
+            if existing_tischnummern:
+                # Suche die nächste freie Zahl
+                for i in range(1, max(existing_tischnummern) + 2):
+                    if i not in existing_tischnummern:
+                        tischnummer = str(i)
+                        break
+            else:
+                # Standardwert, falls keine Tischnummern existieren
+                tischnummer = "1"
+
+        if invite:
+            # Bearbeiten einer bestehenden Einladung
+            invite.verein = verein
+            invite.tischnummer = tischnummer
+            invite.token = token
+        else:
+            # Erstellen einer neuen Einladung
+            link = f"/respond/{token}"
+            qr_path = generate_qr(link, token)
+            invite = Invite(
+                verein=verein,
+                tischnummer=tischnummer,
+                token=token,
+                link=link,
+                qr_code_path=qr_path,
+                created_at=datetime.now(timezone.utc)
+            )
+            db.session.add(invite)
+
+        db.session.commit()
+        flash("Einladung erfolgreich gespeichert.", "success")
+        return redirect(url_for("admin.index"))
+
     return render_template(
         "admin.html",
         invites=invites,
@@ -35,38 +93,9 @@ def index():
         whatsapp_active=whatsapp_active,
         response_count=response_count,
         total_invites=total_invites,
-        total_persons=total_persons
+        total_persons=total_persons,
+        invite=invite
     )
-
-@admin_bp.route("/create", methods=["GET", "POST"])
-@login_required
-def create_invite():
-    """
-    Handles the creation of a new invite and generates a QR code for it.
-
-    Returns:
-        - Redirect to the admin dashboard if the invite is successfully created.
-        - Rendered HTML template for the invite creation form if the request method is GET.
-    """
-    if request.method == "POST":
-        verein = request.form.get("verein")
-        adresse = request.form.get("adresse")
-        token = adresse.strip() if adresse else uuid.uuid4().hex[:10]
-        link = f"/respond/{token}"
-        qr_path = generate_qr(link, token)
-        invite = Invite(
-            verein=verein,
-            adresse="",
-            token=token,
-            link=link,
-            qr_code_path=qr_path,
-            created_at=datetime.now(timezone.utc)
-        )
-        db.session.add(invite)
-        db.session.commit()
-        flash("Einladung erstellt", "success")
-        return redirect(url_for("admin.index"))
-    return render_template("invite_form.html")
 
 @admin_bp.route("/delete/<token>", methods=["POST"])
 @login_required
@@ -100,7 +129,7 @@ def delete_invite(token):
 @login_required
 def settings():
     """
-    Manages WhatsApp notification settings and the invite header for the admin.
+    Manages WhatsApp notification settings for the admin.
 
     Returns:
         - Redirect to the settings page after saving changes (POST request).
@@ -108,39 +137,33 @@ def settings():
     """
     phone_setting = Setting.query.filter_by(key="whatsapp_phone").first()
     apikey_setting = Setting.query.filter_by(key="whatsapp_apikey").first()
+    whatsapp_active = phone_setting and apikey_setting and phone_setting.value and apikey_setting.value
     invite_header_setting = Setting.query.filter_by(key="invite_header").first()
-
     if request.method == "POST":
-        # Eingaben aus dem Formular abrufen
-        phone = request.form.get("phone", "").strip()
-        apikey = request.form.get("apikey", "").strip()
-        invite_header = request.form.get("invite_header", "").strip()
-
-        # Validierung: Nur speichern, wenn ein Wert vorhanden ist
+        phone = request.form.get("phone")
+        apikey = request.form.get("apikey")
+        invite_header = request.form.get("invite_header")
         if phone_setting:
-            phone_setting.value = phone if phone else phone_setting.value
-        elif phone:
+            phone_setting.value = phone
+        else:
             db.session.add(Setting(key="whatsapp_phone", value=phone))
-
         if apikey_setting:
-            apikey_setting.value = apikey if apikey else apikey_setting.value
-        elif apikey:
+            apikey_setting.value = apikey
+        else:
             db.session.add(Setting(key="whatsapp_apikey", value=apikey))
-
         if invite_header_setting:
-            invite_header_setting.value = invite_header if invite_header else invite_header_setting.value
-        elif invite_header:
+            invite_header_setting.value = invite_header
+        else:
             db.session.add(Setting(key="invite_header", value=invite_header))
-
-        # Änderungen speichern
+            
         db.session.commit()
         flash("Einstellungen gespeichert", "success")
         return redirect(url_for("admin.settings"))
-
-    # Werte für das Template abrufen
+    
     return render_template(
         "admin_settings.html",
         phone=phone_setting.value if phone_setting else "",
         apikey=apikey_setting.value if apikey_setting else "",
-        invite_header_value=invite_header_setting.value if invite_header_setting else "",
+        invite_header_value = invite_header_setting.value if invite_header_setting else "",
+        whatsapp_active=whatsapp_active
     )

@@ -14,7 +14,7 @@ class Invite(db.Model):
     __tablename__ = "invites"
     id = db.Column(db.Integer, primary_key=True)
     verein = db.Column(db.String(150), nullable=False)
-    adresse = db.Column(db.String(200), nullable=True)
+    tischnummer = db.Column(db.String(200), nullable=True)
     token = db.Column(db.String(64), unique=True, nullable=False)
     link = db.Column(db.String(512), nullable=False)
     qr_code_path = db.Column(db.String(255), nullable=False)

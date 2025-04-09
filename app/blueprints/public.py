@@ -29,17 +29,28 @@ def respond(token):
     invite_header = Setting.query.filter_by(key="invite_header").first()
     invite_header_value = invite_header.value if invite_header else "Einladung"
 
+    # Vorhandene Antwort abrufen
+    response = Response.query.filter_by(token=token).first()
+
     if request.method == "POST":
         # Verarbeite die Rückmeldung
         attending = request.form.get("attending")
-        persons = int(request.form.get("persons", 0))
-        drinks = request.form.get("drinks", "")
-        response = Response.query.filter_by(token=token).first()
+        persons = request.form.get("persons", "").strip()  # Standardwert leerer String
+        drinks = request.form.get("drinks", "").strip()
+
+        # Validierung: Konvertiere `persons` nur, wenn es nicht leer ist
+        try:
+            persons = int(persons) if persons else 0
+        except ValueError:
+            persons = 0
+
         if response:
+            # Aktualisiere die bestehende Antwort
             response.attending = attending
             response.persons = persons
             response.drinks = drinks
         else:
+            # Neue Antwort erstellen
             response = Response(
                 token=token,
                 attending=attending,
@@ -51,7 +62,13 @@ def respond(token):
         flash("Antwort gespeichert. Danke!", "success")
         return redirect(url_for("public.respond", token=token))
 
-    return render_template("respond.html", invite=invite, invite_header=invite_header_value)
+    # Übergabe der vorhandenen Antwort an das Template
+    return render_template(
+        "respond.html",
+        invite=invite,
+        invite_header=invite_header_value,
+        response=response  # Übergibt die gespeicherten Daten
+    )
 
 @public_bp.route("/impressum")
 def legal_impressum():

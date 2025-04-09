@@ -25,18 +25,23 @@ def logout():
     flash("Erfolgreich abgemeldet", "success")
     return redirect(url_for("auth.login"))
 
-@auth_bp.route("/change-password", methods=["GET", "POST"])
+@auth_bp.route("/change_password", methods=["GET", "POST"])
 @login_required
 def change_password():
     if request.method == "POST":
-        pw1 = request.form.get("new_password")
-        pw2 = request.form.get("confirm_password")
-        if not pw1 or pw1 != pw2:
-            flash("Die Passwörter stimmen nicht überein.", "danger")
-            return render_template("change_password.html")
-        current_user.set_password(pw1)
+        new_password = request.form.get("new_password")
+        confirm_password = request.form.get("confirm_password")
+
+        if not new_password or new_password != confirm_password:
+            flash("Passwörter stimmen nicht überein oder sind leer.", "danger")
+            return redirect(url_for("auth.change_password"))
+
+        # Passwort setzen und `force_password_change` deaktivieren
+        current_user.set_password(new_password)
         current_user.force_password_change = False
         db.session.commit()
-        flash("Passwort geändert", "success")
+
+        flash("Passwort erfolgreich geändert.", "success")
         return redirect(url_for("admin.index"))
+
     return render_template("change_password.html")

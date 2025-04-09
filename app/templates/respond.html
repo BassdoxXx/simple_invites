@@ -4,45 +4,76 @@
 
 {% block content %}
 <!-- Dynamischer Einladungstext -->
-<h1 class="text-3xl font-bold mb-6">{{ invite_header|safe }}</h1>
+<h1 class="text-3xl font-bold mb-6 text-center">{{ invite_header|safe }}</h1>
 <br>
-<p class="mb-6 text-gray-700">
+<p class="mb-6 text-gray-700 text-center">
     Liebe <strong>{{ invite.verein }}</strong>,<br>
     hier könnt ihr eure Teilnahme bestätigen und eure Angaben <strong>bis zwei Tage vor dem Fest</strong> ändern. <br>
     Scannt dazu einfach wieder den <strong>QR-Code</strong> oder gebt den <strong>Einladungscode (Token)</strong> erneut ein, den ihr erhalten habt.
+</p>
 
-<form method="POST" class="space-y-6">
-    <div>
-        <label class="block font-medium mb-1">Kommt ihr?</label>
-        <select name="attending" required class="w-full p-2 border rounded">
-            <option value="" disabled {% if not response %}selected{% endif %}>Bitte auswählen</option>
+<form method="POST">
+    <h1 class="text-2xl font-bold mb-4">{{ invite_header }}</h1>
+    <p class="mb-4">Hallo, {{ invite.verein }}! Bitte teile uns deine Rückmeldung mit.</p>
+
+    <div class="mb-4">
+        <label class="block font-medium mb-1">Nimmst du teil?</label>
+        <select name="attending" class="w-full p-2 border rounded">
             <option value="yes" {% if response and response.attending == 'yes' %}selected{% endif %}>Ja</option>
             <option value="no" {% if response and response.attending == 'no' %}selected{% endif %}>Nein</option>
         </select>
     </div>
 
-    <div>
-        <label class="block font-medium mb-1">Wie viele Personen?</label>
-        <input type="number" name="persons" min="1" max="100"
-               class="w-full p-2 border rounded"
-               value="{{ response.persons if response else '' }}">
+    <div class="mb-4">
+        <label class="block font-medium mb-1">Anzahl der Personen</label>
+        <input
+            type="number"
+            name="persons"
+            value="{{ response.persons if response else '' }}"
+            class="w-full p-2 border rounded"
+            placeholder="z.B. 2"
+        />
     </div>
 
-    <div>
-        <label class="block font-medium mb-1">Getränkewunsch (optional)</label>
-        <textarea name="drinks" class="w-full p-2 border rounded"
-                  maxlength="200"
-                  placeholder="z.B. 2 Kisten Spezi, 1 Fass Bier">{{ response.drinks if response else '' }}</textarea>
+    <div class="mb-4">
+        <label class="block font-medium mb-1">Getränkewünsche</label>
+        <input
+            type="text"
+            name="drinks"
+            value="{{ response.drinks if response else '' }}"
+            class="w-full p-2 border rounded"
+            placeholder="z.B. Wasser, Cola"
+        />
     </div>
 
-    <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
-        Antwort absenden
+    <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
+        Rückmeldung speichern
     </button>
 </form>
 
+<!-- Hinweis für Nutzer ohne Antwort -->
 {% if not response %}
 <p class="mt-6 text-sm text-blue-700 text-center italic">
-    Ihr könnte eure Antwort später jederzeit erneut ändern - bis zwei Tage vor dem Fest.
+    Ihr könnt eure Antwort später jederzeit erneut ändern - bis zwei Tage vor dem Fest.
 </p>
 {% endif %}
+
+<script>
+    // Funktion zum Ein- und Ausblenden der zusätzlichen Felder
+    function toggleFields(attending) {
+        const additionalFields = document.getElementById("additional-fields");
+
+        if (attending === "no") {
+            additionalFields.style.display = "none"; // Felder ausblenden
+        } else {
+            additionalFields.style.display = "block"; // Felder einblenden
+        }
+    }
+
+    // Initialer Zustand basierend auf der aktuellen Auswahl
+    document.addEventListener("DOMContentLoaded", () => {
+        const attending = document.querySelector('input[name="attending"]:checked');
+        toggleFields(attending ? attending.value : null);
+    });
+</script>
 {% endblock %}

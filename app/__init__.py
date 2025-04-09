@@ -13,7 +13,7 @@ def create_app(testing=False):
     basedir = os.path.abspath(os.path.dirname(__file__))
     db_path = os.path.join(basedir, "../data/simple_invites.db")
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:' if testing else f"sqlite:///{db_path}"
-    app.config['SECRET_KEY'] = "changeme123"
+    app.config['SECRET_KEY'] = "changeme"
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     db.init_app(app)
@@ -31,5 +31,17 @@ def create_app(testing=False):
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(admin_bp, url_prefix="/admin")
     app.register_blueprint(public_bp)
+    
 
+    with app.app_context():
+        db.create_all()
+        if not User.query.first():
+            admin_user = User(username="admin")
+            admin_user.set_password("changeme")
+            admin_user.force_password_change = True
+            db.session.add(admin_user)
+            db.session.commit()
+            print("Admin-Benutzer wurde erstellt: Benutzername=admin, Passwort=changeme")
+            
+            
     return app

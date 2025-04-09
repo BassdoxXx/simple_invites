@@ -12,6 +12,11 @@
 - Optional: WhatsApp-Benachrichtigung (via CallMeBot)
 - Vollständig in Docker oder lokal nutzbar
 - Übersichtliche Statistiken im Admin-Bereich (z. B. Anzahl der Zusagen)
+- **Automatische Tischnummernvergabe**:
+  - Die nächste freie Tischnummer wird automatisch vergeben.
+  - Manuelle Eingabe ist möglich, aber doppelte Tischnummern werden verhindert.
+- **Eindeutige Gastnamen**:
+  - Es wird sichergestellt, dass kein Name doppelt vorkommt.
 
 ## 🚀 Nutzung
 
@@ -86,4 +91,4 @@ simple_invites/
 
 ---
 
-Mit ❤️ gebaut für das 150-jährige Jubiläum der Freiwilligen Feuerwehr Windischletten – oder jedes andere Event.
+Mit ❤️ und CoPilot gebaut für das 150-jährige Jubiläum der Freiwilligen Feuerwehr Windischletten – oder jedes andere Event.
