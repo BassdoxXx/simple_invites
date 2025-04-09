@@ -3,13 +3,13 @@
 {% block title %}Einladung beantworten{% endblock %}
 
 {% block content %}
-<h1 class="text-2xl font-bold mb-4">🎉 Einladung zum 150 jährigen Bestehen der <strong>FF Windischletten</strong></h1>
+<!-- Dynamischer Einladungstext -->
+<h1 class="text-3xl font-bold mb-6">{{ invite_header|safe }}</h1>
 <br>
 <p class="mb-6 text-gray-700">
     Liebe <strong>{{ invite.verein }}</strong>,<br>
-    Ihr könnt hier eure Teilnahme an unserem 150 jährigen Feuerwehrfest bestätigen –
-    und eure Angaben <strong>jederzeit bis zwei Tage vor dem Fest</strong> ändern.
-</p>
+    hier könnt ihr eure Teilnahme bestätigen und eure Angaben <strong>bis zwei Tage vor dem Fest</strong> ändern. <br>
+    Scannt dazu einfach wieder den <strong>QR-Code</strong> oder gebt den <strong>Einladungscode (Token)</strong> erneut ein, den ihr erhalten habt.
 
 <form method="POST" class="space-y-6">
     <div>
@@ -32,7 +32,7 @@
         <label class="block font-medium mb-1">Getränkewunsch (optional)</label>
         <textarea name="drinks" class="w-full p-2 border rounded"
                   maxlength="200"
-                  placeholder="z. B. 2 Kisten Spezi, 1 Fass Bier">{{ response.drinks if response else '' }}</textarea>
+                  placeholder="z.B. 2 Kisten Spezi, 1 Fass Bier">{{ response.drinks if response else '' }}</textarea>
     </div>
 
     <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
@@ -42,7 +42,7 @@
 
 {% if not response %}
 <p class="mt-6 text-sm text-blue-700 text-center italic">
-    Du kannst deine Antwort später jederzeit erneut ändern – bis zwei Tage vor dem Fest.
+    Ihr könnte eure Antwort später jederzeit erneut ändern - bis zwei Tage vor dem Fest.
 </p>
 {% endif %}
 {% endblock %}

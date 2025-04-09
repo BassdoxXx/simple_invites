@@ -100,7 +100,7 @@ def delete_invite(token):
 @login_required
 def settings():
     """
-    Manages WhatsApp notification settings for the admin.
+    Manages WhatsApp notification settings and the invite header for the admin.
 
     Returns:
         - Redirect to the settings page after saving changes (POST request).
@@ -108,24 +108,39 @@ def settings():
     """
     phone_setting = Setting.query.filter_by(key="whatsapp_phone").first()
     apikey_setting = Setting.query.filter_by(key="whatsapp_apikey").first()
-    whatsapp_active = phone_setting and apikey_setting and phone_setting.value and apikey_setting.value
+    invite_header_setting = Setting.query.filter_by(key="invite_header").first()
+
     if request.method == "POST":
-        phone = request.form.get("phone")
-        apikey = request.form.get("apikey")
+        # Eingaben aus dem Formular abrufen
+        phone = request.form.get("phone", "").strip()
+        apikey = request.form.get("apikey", "").strip()
+        invite_header = request.form.get("invite_header", "").strip()
+
+        # Validierung: Nur speichern, wenn ein Wert vorhanden ist
         if phone_setting:
-            phone_setting.value = phone
-        else:
+            phone_setting.value = phone if phone else phone_setting.value
+        elif phone:
             db.session.add(Setting(key="whatsapp_phone", value=phone))
+
         if apikey_setting:
-            apikey_setting.value = apikey
-        else:
+            apikey_setting.value = apikey if apikey else apikey_setting.value
+        elif apikey:
             db.session.add(Setting(key="whatsapp_apikey", value=apikey))
+
+        if invite_header_setting:
+            invite_header_setting.value = invite_header if invite_header else invite_header_setting.value
+        elif invite_header:
+            db.session.add(Setting(key="invite_header", value=invite_header))
+
+        # Änderungen speichern
         db.session.commit()
         flash("Einstellungen gespeichert", "success")
         return redirect(url_for("admin.settings"))
+
+    # Werte für das Template abrufen
     return render_template(
         "admin_settings.html",
         phone=phone_setting.value if phone_setting else "",
         apikey=apikey_setting.value if apikey_setting else "",
-        whatsapp_active=whatsapp_active
+        invite_header_value=invite_header_setting.value if invite_header_setting else "",
     )

@@ -35,13 +35,13 @@ class Response(db.Model):
 
 class Setting(db.Model):
     """
-    Universelle Key-Value Tabelle für Konfigurationen wie z. B. WhatsApp API-Daten.
+    Universelle Key-Value Tabelle für Konfigurationen wie z.B. WhatsApp API-Daten.
     Ermöglicht flexible Erweiterung um weitere Einstellungen.
     """
     __tablename__ = "settings"
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.String(50), unique=True, nullable=False)
-    value = db.Column(db.String(255), nullable=False)
+    value = db.Column(db.Text, nullable=False)
 
 class User(db.Model, UserMixin):
     """

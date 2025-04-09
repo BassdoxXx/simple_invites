@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from app.models import Invite, Response, db
+from app.models import Setting, Invite, Response, db
 from datetime import datetime, timezone
 
 public_bp = Blueprint("public", __name__)
@@ -18,38 +18,40 @@ def find_token():
 
 @public_bp.route("/respond/<token>", methods=["GET", "POST"])
 def respond(token):
+    """
+    Zeigt die Einladung an und verarbeitet die Rückmeldung.
+    """
     invite = Invite.query.filter_by(token=token).first()
     if not invite:
         return "Ungültiger Link", 404
-    response = Response.query.filter_by(token=token).first()
+
+    # Einladungstext aus der Datenbank laden
+    invite_header = Setting.query.filter_by(key="invite_header").first()
+    invite_header_value = invite_header.value if invite_header else "Einladung"
+
     if request.method == "POST":
-        try:
-            attending = request.form.get("attending")
-            persons = int(request.form.get("persons", 0))
-            if persons < 1 or persons > 100:
-                flash("Die Anzahl der Personen muss zwischen 1 und 100 liegen.", "danger")
-                return render_template("respond.html", invite=invite, response=response)
-            drinks = request.form.get("drinks", "")
-            if response:
-                response.attending = attending
-                response.persons = persons
-                response.drinks = drinks
-                response.timestamp = datetime.now(timezone.utc)
-            else:
-                response = Response(
-                    token=token,
-                    attending=attending,
-                    persons=persons,
-                    drinks=drinks,
-                    timestamp=datetime.now(timezone.utc)
-                )
-                db.session.add(response)
-            db.session.commit()
-            flash("Antwort gespeichert. Danke!", "success")
-            return redirect(url_for("public.respond", token=token))
-        except ValueError:
-            flash("Ungültige Eingabe bei der Personenanzahl.", "danger")
-    return render_template("respond.html", invite=invite, response=response)
+        # Verarbeite die Rückmeldung
+        attending = request.form.get("attending")
+        persons = int(request.form.get("persons", 0))
+        drinks = request.form.get("drinks", "")
+        response = Response.query.filter_by(token=token).first()
+        if response:
+            response.attending = attending
+            response.persons = persons
+            response.drinks = drinks
+        else:
+            response = Response(
+                token=token,
+                attending=attending,
+                persons=persons,
+                drinks=drinks
+            )
+            db.session.add(response)
+        db.session.commit()
+        flash("Antwort gespeichert. Danke!", "success")
+        return redirect(url_for("public.respond", token=token))
+
+    return render_template("respond.html", invite=invite, invite_header=invite_header_value)
 
 @public_bp.route("/impressum")
 def legal_impressum():
