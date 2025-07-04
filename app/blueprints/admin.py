@@ -1,8 +1,11 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Response as FlaskResponse
 from flask_login import login_required
 from app.models import Invite, Response, Setting, db
 from app.utils.qr_utils import generate_qr
 import os
+import csv
+import io
 import uuid
 from datetime import datetime, timezone
 
@@ -166,4 +169,55 @@ def settings():
         apikey=apikey_setting.value if apikey_setting else "",
         invite_header_value = invite_header_setting.value if invite_header_setting else "",
         whatsapp_active=whatsapp_active
+    )
+    
+    
+@admin_bp.route("/export/csv")
+@login_required
+def export_all_csv():
+    invites = Invite.query.all()
+    responses = {r.token: r for r in Response.query.all()}
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter=';')
+    writer.writerow(["Verein", "Tischnummer", "Token", "Antwort", "Personen", "Getränke", "Zuletzt aktualisiert"])
+    for invite in invites:
+        res = responses.get(invite.token)
+        writer.writerow([
+            invite.verein,
+            invite.tischnummer,
+            invite.token,
+            res.attending if res else "",
+            res.persons if res else "",
+            res.drinks if res else "",
+            res.timestamp.strftime('%d.%m.%Y %H:%M') if res and res.timestamp else ""
+        ])
+    output.seek(0)
+    return FlaskResponse(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=einladungen.csv"}
+    )
+
+@admin_bp.route("/export/csv/<token>")
+@login_required
+def export_single_csv(token):
+    invite = Invite.query.filter_by(token=token).first_or_404()
+    res = Response.query.filter_by(token=token).first()
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter=';')
+    writer.writerow(["Verein", "Tischnummer", "Token", "Antwort", "Personen", "Getränke", "Zuletzt aktualisiert"])
+    writer.writerow([
+        invite.verein,
+        invite.tischnummer,
+        invite.token,
+        res.attending if res else "",
+        res.persons if res else "",
+        res.drinks if res else "",
+        res.timestamp.strftime('%d.%m.%Y %H:%M') if res and res.timestamp else ""
+    ])
+    output.seek(0)
+    return FlaskResponse(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment;filename=einladung_{invite.verein}_{invite.token}.csv"}
     )
