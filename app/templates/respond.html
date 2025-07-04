@@ -14,10 +14,10 @@
 
 <form method="POST">
     <h1 class="text-2xl font-bold mb-4">{{ invite_header }}</h1>
-    <p class="mb-4">Hallo, {{ invite.verein }}! Bitte teile uns deine Rückmeldung mit.</p>
+    <p class="mb-4">Hallo, {{ invite.verein }}! Bitte teile uns eure Rückmeldung mit.</p>
 
     <div class="mb-4">
-        <label class="block font-medium mb-1">Nimmst du teil?</label>
+        <label class="block font-medium mb-1">Nehmt ihr teil?</label>
         <select name="attending" class="w-full p-2 border rounded">
             <option value="yes" {% if response and response.attending == 'yes' %}selected{% endif %}>Ja</option>
             <option value="no" {% if response and response.attending == 'no' %}selected{% endif %}>Nein</option>
@@ -29,9 +29,12 @@
         <input
             type="number"
             name="persons"
+            min="1"
+            max="100"
+            required
             value="{{ response.persons if response else '' }}"
             class="w-full p-2 border rounded"
-            placeholder="z.B. 2"
+            placeholder="z.B. 5"
         />
     </div>
 

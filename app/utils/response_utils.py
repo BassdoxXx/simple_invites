@@ -21,6 +21,9 @@ def save_response(response, token, attending, persons, drinks):
         persons (int): Number of persons attending.
         drinks (str): Drink preferences.
     """
+    if not validate_person_count(persons):
+        raise ValueError("Die Anzahl der Personen muss größer als 0 sein.")
+    
     if response:
         response.attending = attending
         response.persons = persons

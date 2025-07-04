@@ -70,8 +70,8 @@ def index():
             invite.token = token
         else:
             # Erstellen einer neuen Einladung
-            link = f"/respond/{token}"
-            qr_path = generate_qr(link, token)
+            link = url_for("public.respond", token=token, _external=True)
+            qr_path = generate_qr(link, verein, token)
             invite = Invite(
                 verein=verein,
                 tischnummer=tischnummer,

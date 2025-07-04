@@ -14,7 +14,7 @@
             <input
                 type="text"
                 name="verein"
-                placeholder="Name der Feuerwehr"
+                placeholder="Name des Vereins"
                 value="{{ invite.verein if invite else '' }}"
                 required
                 class="p-2 border rounded w-full"
@@ -88,12 +88,25 @@
                 <td class="p-3">{{ invite.tischnummer }}</td>
                 <td class="p-3 text-sm break-all">
                     <a href="{{ invite.link }}" class="text-blue-600 underline" target="_blank">Link öffnen</a>
+                    <button type="button"
+                        class="ml-2 text-gray-500 hover:text-blue-700"
+                        data-link="{{ invite.link | e }}"
+                        onclick="copyToClipboard(this)"
+                        title="Link kopieren">
+                        📋
+                    </button>
                 </td>
-                <td class="p-3">
-                    <div class="h-16 w-16 flex items-center justify-center">
-                        <img src="{{ url_for('static', filename=invite.qr_code_path) }}" alt="QR" class="h-16 w-16 object-contain" />
-                    </div>
-                </td>
+            <td class="p-3">
+                <div class="h-16 w-16 flex items-center justify-center">
+                <a href="{{ url_for('static', filename=invite.qr_code_path) }}"
+                download="{{ (invite.verein ~ '_' ~ invite.token)|replace(' ', '_') }}.png"
+                title="QR-Code herunterladen">
+                    <img src="{{ url_for('static', filename=invite.qr_code_path) }}"
+                        alt="QR"
+                        class="h-16 w-16 object-contain cursor-pointer" />
+                </a>
+                </div>
+            </td>
                 {% set res = responses.get(invite.token) %}
                 <td class="p-3 font-semibold">
                     {% if res %}
@@ -112,7 +125,7 @@
                 <td class="p-3 text-sm">{{ res.drinks if res else "-" }}</td>
                 <td class="p-3 text-sm">{{ res.timestamp.strftime('%d.%m.%Y %H:%M') if res else "-" }}</td>
                 <td class="p-3 text-center">
-                    <form method="POST" action="{{ url_for('admin.delete_invite', token=invite.token) }}" onsubmit="return confirm('Einladung wirklich löschen?')">
+                    <form method="POST" action="{{ url_for('admin.delete_invite', token=invite.token) }}" onsubmit="return confirm('FLORIAN! Einladung wirklich löschen?')">
                         <button type="submit" class="text-red-600 hover:text-red-800" title="Löschen">🗑️</button>
                     </form>
                 </td>
@@ -133,5 +146,38 @@
             row.style.display = text.includes(input) ? "" : "none";
         });
     }
+</script>
+<script>
+function copyToClipboard(btn) {
+    const text = btn.dataset.link;
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(function() {
+            showCopySuccess(btn);
+        }, function(err) {
+            alert("Kopieren fehlgeschlagen: " + err);
+        });
+    } else {
+        // Fallback für unsichere Kontexte/ältere Browser
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";  // Verhindert Scrollen
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        try {
+            document.execCommand('copy');
+            showCopySuccess(btn);
+        } catch (err) {
+            alert("Kopieren fehlgeschlagen: " + err);
+        }
+        document.body.removeChild(textarea);
+    }
+}
+
+function showCopySuccess(btn) {
+    const old = btn.innerHTML;
+    btn.innerHTML = "✅";
+    setTimeout(() => { btn.innerHTML = old; }, 1200);
+}
 </script>
 {% endblock %}

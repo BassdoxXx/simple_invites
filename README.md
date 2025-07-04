@@ -41,7 +41,7 @@ python -m app.main
 Öffne [http://localhost:5000](http://localhost:5000) im Browser.
 
 - Login: `admin`
-- Passwort: `admin123` (beim ersten Login wird Änderung erzwungen)
+- Passwort: `changeme` (beim ersten Login wird Änderung erzwungen)
 
 4. **Docker (optional)**:
 
