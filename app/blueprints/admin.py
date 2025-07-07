@@ -179,13 +179,14 @@ def export_all_csv():
     responses = {r.token: r for r in Response.query.all()}
     output = io.StringIO()
     writer = csv.writer(output, delimiter=';')
-    writer.writerow(["Verein", "Tischnummer", "Token", "Antwort", "Personen", "Getränke", "Zuletzt aktualisiert"])
+    writer.writerow(["Verein", "Tischnummer", "Link", "Antwort", "Personen", "Getränke", "Zuletzt aktualisiert"])
     for invite in invites:
         res = responses.get(invite.token)
+        full_link = url_for("public.respond", token=invite.token, _external=True)
         writer.writerow([
             invite.verein,
             invite.tischnummer,
-            invite.token,
+            full_link,
             res.attending if res else "",
             res.persons if res else "",
             res.drinks if res else "",
@@ -205,11 +206,12 @@ def export_single_csv(token):
     res = Response.query.filter_by(token=token).first()
     output = io.StringIO()
     writer = csv.writer(output, delimiter=';')
-    writer.writerow(["Verein", "Tischnummer", "Token", "Antwort", "Personen", "Getränke", "Zuletzt aktualisiert"])
+    writer.writerow(["Verein", "Tischnummer", "Link", "Antwort", "Personen", "Getränke", "Zuletzt aktualisiert"])
+    full_link = url_for("public.respond", token=invite.token, _external=True)
     writer.writerow([
         invite.verein,
         invite.tischnummer,
-        invite.token,
+        full_link,
         res.attending if res else "",
         res.persons if res else "",
         res.drinks if res else "",

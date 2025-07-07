@@ -5,9 +5,11 @@
   <div class="max-w-6xl mx-auto flex justify-between items-center">
     <a href="{{ url_for('admin.index') }}" class="font-bold text-xl text-blue-600 hover:underline">👨‍🚒 Simple Invites – Admin</a>
     <div class="space-x-4">
-      <a href="{{ url_for('admin.settings') }}" class="text-blue-600 hover:underline">Einstellungen</a>
-      <a href="{{ url_for('auth.change_password') }}" class="text-blue-600 hover:underline">Passwort</a>
-      <a href="{{ url_for('auth.logout') }}" class="text-red-600 hover:underline">Logout</a>
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('auth.logout') }}" class="text-red-600 hover:underline">Logout</a>
+        <a href="{{ url_for('admin.settings') }}" class="text-blue-600 hover:underline">Einstellungen</a>
+        <a href="{{ url_for('auth.change_password') }}" class="text-blue-600 hover:underline">Passwort ändern</a>
+      {% endif %}
     </div>
   </div>
 </nav>
