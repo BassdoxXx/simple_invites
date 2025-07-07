@@ -63,11 +63,15 @@ def respond(token):
         return redirect(url_for("public.respond", token=token))
 
     # Übergabe der vorhandenen Antwort an das Template
+    event_name_setting = Setting.query.filter_by(key="event_name").first()
+    vereins_name_setting = Setting.query.filter_by(key="vereins_name").first()
     return render_template(
         "respond.html",
         invite=invite,
         invite_header=invite_header_value,
-        response=response  # Übergibt die gespeicherten Daten
+        response=response,
+        event_name=event_name_setting.value if event_name_setting else "",
+        vereins_name=vereins_name_setting.value if vereins_name_setting else ""
     )
 
 @public_bp.route("/impressum")

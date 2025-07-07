@@ -89,6 +89,7 @@ def index():
         flash("Einladung erfolgreich gespeichert.", "success")
         return redirect(url_for("admin.index"))
 
+    vereins_name_setting = Setting.query.filter_by(key="vereins_name").first()
     return render_template(
         "admin.html",
         invites=invites,
@@ -97,7 +98,8 @@ def index():
         response_count=response_count,
         total_invites=total_invites,
         total_persons=total_persons,
-        invite=invite
+        invite=invite,
+        vereins_name=vereins_name_setting.value if vereins_name_setting else "",
     )
 
 @admin_bp.route("/delete/<token>", methods=["POST"])
@@ -131,21 +133,19 @@ def delete_invite(token):
 @admin_bp.route("/settings", methods=["GET", "POST"])
 @login_required
 def settings():
-    """
-    Manages WhatsApp notification settings for the admin.
-
-    Returns:
-        - Redirect to the settings page after saving changes (POST request).
-        - Rendered HTML template for the settings page (GET request).
-    """
     phone_setting = Setting.query.filter_by(key="whatsapp_phone").first()
     apikey_setting = Setting.query.filter_by(key="whatsapp_apikey").first()
-    whatsapp_active = phone_setting and apikey_setting and phone_setting.value and apikey_setting.value
     invite_header_setting = Setting.query.filter_by(key="invite_header").first()
+    event_name_setting = Setting.query.filter_by(key="event_name").first()
+    vereins_name_setting = Setting.query.filter_by(key="vereins_name").first()
+
     if request.method == "POST":
-        phone = request.form.get("phone")
-        apikey = request.form.get("apikey")
-        invite_header = request.form.get("invite_header")
+        phone = request.form.get("phone", "")
+        apikey = request.form.get("apikey", "")
+        invite_header = request.form.get("invite_header", "")
+        event_name = request.form.get("event_name", "")
+        vereins_name = request.form.get("vereins_name", "")
+
         if phone_setting:
             phone_setting.value = phone
         else:
@@ -158,16 +158,30 @@ def settings():
             invite_header_setting.value = invite_header
         else:
             db.session.add(Setting(key="invite_header", value=invite_header))
-            
+        if event_name_setting:
+            event_name_setting.value = event_name
+        else:
+            db.session.add(Setting(key="event_name", value=event_name))
+        if vereins_name_setting:
+            vereins_name_setting.value = vereins_name
+        else:
+            db.session.add(Setting(key="vereins_name", value=vereins_name))
         db.session.commit()
         flash("Einstellungen gespeichert", "success")
         return redirect(url_for("admin.settings"))
-    
+
+    # WhatsApp ist nur aktiv, wenn beide Felder ausgefüllt sind
+    whatsapp_active = (
+        phone_setting and apikey_setting and phone_setting.value and apikey_setting.value
+    )
+
     return render_template(
         "admin_settings.html",
         phone=phone_setting.value if phone_setting else "",
         apikey=apikey_setting.value if apikey_setting else "",
-        invite_header_value = invite_header_setting.value if invite_header_setting else "",
+        invite_header_value=invite_header_setting.value if invite_header_setting else "",
+        event_name=event_name_setting.value if event_name_setting else "",
+        vereins_name=vereins_name_setting.value if vereins_name_setting else "",
         whatsapp_active=whatsapp_active
     )
     

@@ -4,6 +4,14 @@
 {% block admin_content %}
 <h1 class="text-3xl font-bold mb-6">Einladungen verwalten</h1>
 
+{% if vereins_name %}
+  <div class="mb-8">
+    <h2 class="text-2xl font-bold text-blue-700">
+      {{ vereins_name }}
+    </h2>
+  </div>
+{% endif %}
+
 <!-- Formular für Einladung -->
 <div class="mb-8 bg-white p-6 rounded shadow">
     <form method="POST" action="{{ url_for('admin.index', invite_id=invite.id if invite else None) }}">
