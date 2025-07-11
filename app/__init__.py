@@ -7,13 +7,26 @@ from app.blueprints.auth import auth_bp
 from app.blueprints.admin import admin_bp
 from app.blueprints.public import public_bp
 import os
+import secrets
 
 def create_app(testing=False):
     app = Flask(__name__)
-    basedir = os.path.abspath(os.path.dirname(__file__))
-    db_path = os.path.join(basedir, "../data/simple_invites.db")
+    db_path = os.path.join("/app/data", "simple_invites.db")
+    secret_file = os.path.join("/app/data", "secret_key.txt")
+
+    # SECRET_KEY laden oder generieren
+    secret_key = os.environ.get("SECRET_KEY")
+    if not secret_key:
+        if os.path.exists(secret_file):
+            with open(secret_file, "r") as f:
+                secret_key = f.read().strip()
+        else:
+            secret_key = secrets.token_hex(32)
+            with open(secret_file, "w") as f:
+                f.write(secret_key)
+    app.config['SECRET_KEY'] = secret_key
+
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:' if testing else f"sqlite:///{db_path}"
-    app.config['SECRET_KEY'] = "changeme"
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     db.init_app(app)
@@ -41,7 +54,6 @@ def create_app(testing=False):
             admin_user.force_password_change = True
             db.session.add(admin_user)
             db.session.commit()
-            print("Admin-Benutzer wurde erstellt: Benutzername=admin, Passwort=changeme")
-            
+           
             
     return app

@@ -1,1 +1,11 @@
-# Placeholder content for docker-compose.yml
+services:
+  simple_invites:
+    image: bassdoxxx/simple_invites:latest
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./app/static:/app/app/static
+      - ./data:/app/data
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=dein_geheimer_schluessel
