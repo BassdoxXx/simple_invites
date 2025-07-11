@@ -11,8 +11,9 @@ import secrets
 
 def create_app(testing=False):
     app = Flask(__name__)
-    db_path = os.path.join("/app/data", "simple_invites.db")
-    secret_file = os.path.join("/app/data", "secret_key.txt")
+    data_dir = "/data/simple_invites"
+    db_path = os.path.join(data_dir, "simple_invites.db")
+    secret_file = os.path.join(data_dir, "secret_key.txt")
 
     # SECRET_KEY laden oder generieren
     secret_key = os.environ.get("SECRET_KEY")
@@ -44,7 +45,6 @@ def create_app(testing=False):
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(admin_bp, url_prefix="/admin")
     app.register_blueprint(public_bp)
-    
 
     with app.app_context():
         db.create_all()
@@ -54,6 +54,5 @@ def create_app(testing=False):
             admin_user.force_password_change = True
             db.session.add(admin_user)
             db.session.commit()
-           
-            
+
     return app
