@@ -29,7 +29,8 @@ def respond(token):
     """
     invite = Invite.query.filter_by(token=token).first()
     if not invite:
-        return "Ungültiger Link", 404
+        flash("Uuupsii! Diesen Token kennen wir nicht. Bitte überprüfe deine Eingabe.", "danger")
+        return redirect(url_for("public.index"))
 
     # Einladungstext aus der Datenbank laden
     invite_header = Setting.query.filter_by(key="invite_header").first()

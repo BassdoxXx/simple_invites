@@ -8,7 +8,7 @@ endblock %} {% block content %}
   >
     {% if vereins_name %}
     <h2
-      class="text-3xl font-extrabold text-pink-600 text-center mb-2 drop-shadow"
+      class="text-3xl font-extrabold text-red-600 text-center mb-2 drop-shadow"
     >
       {{ vereins_name }}
     </h2>
@@ -28,7 +28,7 @@ endblock %} {% block content %}
       <div class="flex flex-col gap-3">
         {% if gast_name %}
         <p class="text-center font-semibold text-gray-700">
-          Teilnahme von <span class="text-pink-600">{{ gast_name }}</span>
+          Teilnahme von <span class="text-red-600">{{ gast_name }}</span>
         </p>
         {% else %}
         <p class="text-center font-semibold text-gray-700">Teilnahme</p>
