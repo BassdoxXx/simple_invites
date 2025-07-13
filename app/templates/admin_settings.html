@@ -38,6 +38,21 @@
       <input type="text" id="event_name" name="event_name" class="w-full p-2 border rounded"
              value="{{ event_name or '' }}" placeholder="z.B. 150 Jahre Freiwillige Feuerwehr XY">
     </div>
+    <div class="mb-4">
+      <label for="max_tables" class="block font-semibold mb-1">Maximale Tischanzahl</label>
+      <input type="number" name="max_tables" id="max_tables" min="1" value="{{ max_tables }}" class="w-full p-2 border rounded" />
+    </div>
+    <div class="mb-4">
+      <label for="max_persons_per_table" class="block font-semibold mb-1">Maximale Personen pro Tisch</label>
+      <input type="number" name="max_persons_per_table" id="max_persons_per_table" min="1" value="{{ max_persons_per_table }}" class="w-full p-2 border rounded" />
+    </div>
+    <div class="mb-4">
+      <label for="enable_tables" class="block font-semibold mb-1">Tisch-Logik aktivieren</label>
+      <select name="enable_tables" id="enable_tables" class="w-full p-2 border rounded">
+        <option value="true" {% if enable_tables == "true" %}selected{% endif %}>Aktiv</option>
+        <option value="false" {% if enable_tables == "false" %}selected{% endif %}>Inaktiv</option>
+      </select>
+    </div>
     <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
       Speichern
     </button>

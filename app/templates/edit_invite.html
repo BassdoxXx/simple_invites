@@ -1,0 +1,32 @@
+{% extends "layout_admin.html" %}
+{% block title %}Einladung bearbeiten{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto mt-10 bg-white rounded-xl shadow-xl p-8 border-4 border-blue-200">
+  <h2 class="text-2xl font-bold text-center mb-6">Einladung bearbeiten</h2>
+  <form method="POST">
+    <div class="mb-4">
+      <label for="verein" class="block font-semibold mb-1">Gast / Verein</label>
+      <input type="text" name="verein" id="verein" value="{{ invite.verein }}" required
+        class="w-full p-3 border-2 border-blue-300 rounded-xl focus:outline-none focus:border-blue-500 transition" />
+    </div>
+    <div class="mb-4">
+      <label for="tischnummer" class="block font-semibold mb-1">Tischnummer</label>
+      <input type="text" name="tischnummer" id="tischnummer" value="{{ invite.tischnummer }}"
+        class="w-full p-3 border-2 border-blue-300 rounded-xl focus:outline-none focus:border-blue-500 transition" />
+    </div>
+    <div class="mb-4">
+      <label>
+        <input type="checkbox" name="manuell_gesetzt" {% if invite.manuell_gesetzt %}checked{% endif %}>
+        Verein manuell auf Tisch setzen (automatische Logik ignorieren)
+      </label>
+    </div>
+    <button type="submit"
+      class="w-full bg-gradient-to-r from-blue-500 via-pink-500 to-purple-500 text-white py-3 px-4 rounded-xl font-bold shadow-lg hover:scale-105 transition">
+      Änderungen speichern
+    </button>
+    <a href="{{ url_for('admin.index') }}"
+      class="block mt-4 text-center text-blue-600 hover:underline">Zurück zur Übersicht</a>
+  </form>
+</div>
+{% endblock %}

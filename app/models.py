@@ -19,6 +19,7 @@ class Invite(db.Model):
     link = db.Column(db.String(512), nullable=False)
     qr_code_path = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    manuell_gesetzt = db.Column(db.Boolean, default=False)
 
 class Response(db.Model):
     """
@@ -30,13 +31,12 @@ class Response(db.Model):
     token = db.Column(db.String(64), db.ForeignKey("invites.token"), nullable=False)
     attending = db.Column(db.String(10), nullable=False)  # "yes" oder "no"
     persons = db.Column(db.Integer, nullable=True)
-    drinks = db.Column(db.String(150), nullable=True)
     timestamp = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
 class Setting(db.Model):
     """
-    Universelle Key-Value Tabelle für Konfigurationen wie z.B. WhatsApp API-Daten.
-    Ermöglicht flexible Erweiterung um weitere Einstellungen.
+    Universelle Key-Value Tabelle für Konfigurationen wie z.B. WhatsApp API-Daten,
+    maximale Tischanzahl (max_tables), Tisch-Logik aktiv/inaktiv (enable_tables) usw.
     """
     __tablename__ = "settings"
     id = db.Column(db.Integer, primary_key=True)
@@ -61,3 +61,10 @@ class User(db.Model, UserMixin):
     def check_password(self, password):
         """Vergleicht Eingabe mit dem gespeicherten Passwort-Hash."""
         return check_password_hash(self.password_hash, password)
+
+class TableAssignment(db.Model):
+    __tablename__ = "table_assignments"
+    id = db.Column(db.Integer, primary_key=True)
+    tischnummer = db.Column(db.Integer, nullable=False)
+    verein = db.Column(db.String(150), nullable=False)
+    personen = db.Column(db.Integer, nullable=False)
