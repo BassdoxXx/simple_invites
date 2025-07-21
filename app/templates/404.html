@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>ALAAAAAAAAAAAAAAAAAARM – Seite nicht gefunden</title>
+    <title>Seite nicht gefunden</title>
     <style>
         body { font-family: sans-serif; text-align: center; margin-top: 10vh; }
         .alarm { font-size: 2.5rem; color: #d32f2f; font-weight: bold; }
@@ -10,9 +10,13 @@
     </style>
 </head>
 <body>
-    <div class="alarm">🚨 ALAAAAAAAAAAAAAAAAAARM 🚨<br>Diese Seite gibt es nicht!</div>
-    <p>
-        <a href="{{ url_for('public.index') }}">Zur Startseite</a>
-    </p>
+    <div class="flex flex-col items-center justify-center h-full py-12">
+      <h1 class="text-6xl font-bold text-red-600 mb-4">404</h1>
+      <h2 class="text-2xl font-bold mb-2">ALAAAAAAAAAAAAAAAAAARM!</h2>
+      <p class="text-lg mb-6">Die angeforderte Seite konnte nicht gefunden werden.</p>
+      <a href="{{ url_for('public.index') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        Zur Startseite
+      </a>
+    </div>
 </body>
 </html>

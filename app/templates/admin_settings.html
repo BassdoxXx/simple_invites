@@ -3,15 +3,7 @@
 {% block title %}Einstellungen{% endblock %}
 
 {% block content %}
-{% if whatsapp_active %}
-  <div class="mb-4 p-3 rounded bg-green-100 text-green-800 shadow">
-    ✅ WhatsApp-Benachrichtigung ist aktuell aktiviert.
-  </div>
-{% else %}
-  <div class="mb-4 p-3 rounded bg-yellow-100 text-yellow-800 shadow">
-    ⚠️ WhatsApp-Benachrichtigung ist derzeit deaktiviert.
-  </div>
-{% endif %}
+
 <div class="max-w-xl mx-auto mt-12 bg-white shadow-lg rounded-xl p-8">
   <h1 class="text-2xl font-bold mb-4">🔔 Einstellungen</h1>
   <p class="text-sm text-gray-600 mb-4">
@@ -20,14 +12,9 @@
   </p>
 
   <form method="POST" class="space-y-6">
-    <div>
-      <label class="block font-medium mb-1">WhatsApp-Nummer (mit +49)</label>
-      <input type="text" name="phone" class="w-full p-2 border rounded" value="{{ phone or '' }}">
-    </div>
-    <div>
-      <label class="block font-medium mb-1">API Key</label>
-      <input type="text" name="apikey" class="w-full p-2 border rounded" value="{{ apikey or '' }}">
-    </div>
+    <!-- CSRF-Token hinzufügen -->
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
     <div>
       <label for="vereins_name" class="block font-semibold mb-1">Verein/Organisation (Gastgeber)</label>
       <input type="text" id="vereins_name" name="vereins_name" class="w-full p-2 border rounded"
@@ -59,7 +46,7 @@
   </form>
 
   <div class="mt-6">
-    <a href="{{ url_for('admin.index') }}" class="text-blue-600 underline">&larr; Zurück zur Übersicht</a>
+    <a href="{{ url_for('admin.index') }}" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">&larr; Zurück zur Übersicht</a>
   </div>
 </div>
 {% endblock %}
