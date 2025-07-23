@@ -1,90 +1,74 @@
-{% extends "layout_guest.html" %} {% block title %}Einladung beantworten{%
-endblock %} {% block content %}
-<div
-  class="flex items-center justify-center bg-gray-100 pt-6 pb-4 min-h-[70vh]"
->
-  <div
-    class="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-md border-4 border-blue-200"
-  >
-    {% if vereins_name %}
-    <h2
-      class="text-3xl font-extrabold text-red-600 text-center mb-2 drop-shadow"
-    >
-      {{ vereins_name }}
-    </h2>
-    {% endif %} {% if event_name %}
-    <h3 class="text-xl font-semibold text-blue-700 text-center mb-6">
-      {{ event_name }}
-    </h3>
+{% extends "layout_guest.html" %} 
+{% block title %}Einladung beantworten{% endblock %} 
+
+{% block content %}
+<!-- Einladender Verein und Event außerhalb der Card -->
+<div class="flex flex-col items-center justify-center bg-gray-100 pt-6 pb-4 min-h-[70vh]">
+  {% if vereins_name %}
+    <h2 class="text-2xl font-extrabold text-red-600 text-center mb-1 drop-shadow">{{ vereins_name }}</h2>
+  {% endif %}
+  {% if event_name %}
+    <h3 class="text-lg font-semibold text-blue-700 text-center mb-4">{{ event_name }}</h3>
+  {% endif %}
+
+  <!-- Card mit Gast-Begrüßung und Formular -->
+  <div class="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-md border-4 border-blue-200">
+    {% if gast_name %}
+      <h3 class="text-xl font-bold text-gray-800 text-center mb-4">Hallo <span class="text-red-600">{{ gast_name }}</span> 👋</h3>
+    {% else %}
+      <h3 class="text-xl font-bold text-gray-800 text-center mb-4">Hallo und willkommen!</h3>
     {% endif %}
     <div class="flex justify-center mb-4">
-      <span
-        class="inline-block bg-blue-600 text-white rounded-full px-4 py-2 text-lg font-bold shadow-lg animate-bounce"
-        >🎉 Einladung</span
-      >
+      <span class="inline-block bg-blue-600 text-white rounded-full px-4 py-2 text-lg font-bold shadow-lg animate-bounce">🎉 Einladung</span>
     </div>
     <form method="POST" class="space-y-4">
       <!-- Teilnahmeauswahl -->
       <div class="flex flex-col gap-3">
-        {% if gast_name %}
-        <p class="text-center font-semibold text-gray-700">
-          Teilnahme von <span class="text-red-600">{{ gast_name }}</span>
-        </p>
-        {% else %}
-        <p class="text-center font-semibold text-gray-700">Teilnahme</p>
-        {% endif %}
-
         <div class="flex justify-center gap-4">
           <label class="w-1/2">
-            <input type="radio" name="attending" value="no" class="peer hidden"
-            id="attending_no" {% if response and response.attending == 'no'
-            %}checked{% endif %}>
-            <div
-              class="w-full text-center border-2 border-red-400 rounded-xl py-3 font-bold shadow transition-all peer-checked:bg-red-500 peer-checked:text-white peer-checked:scale-105 hover:scale-105 cursor-pointer"
-            >
-              Nein
+            <input type="radio" name="attending" value="yes" class="peer hidden"
+              id="attending_yes" {% if response and response.attending == 'yes' %}checked{% endif %}>
+            <div class="w-full text-center border-2 border-green-500 rounded-xl py-3 font-bold shadow transition-all
+              peer-checked:bg-green-500 peer-checked:text-white
+              hover:scale-105 cursor-pointer flex items-center justify-center gap-2">
+              Ja
             </div>
           </label>
-
           <label class="w-1/2">
-            <input type="radio" name="attending" value="yes" class="peer hidden"
-            id="attending_yes" {% if response and response.attending == 'yes'
-            %}checked{% endif %}>
-            <div
-              class="w-full text-center border-2 border-green-400 rounded-xl py-3 font-bold shadow transition-all peer-checked:bg-green-500 peer-checked:text-white peer-checked:scale-105 hover:scale-105 cursor-pointer"
-            >
-              Ja
+            <input type="radio" name="attending" value="no" class="peer hidden"
+              id="attending_no" {% if response and response.attending == 'no' %}checked{% endif %}>
+            <div class="w-full text-center border-2 border-red-500 rounded-xl py-3 font-bold shadow transition-all
+              peer-checked:bg-red-500 peer-checked:text-white
+              hover:scale-105 cursor-pointer flex items-center justify-center gap-2">
+              Nein
             </div>
           </label>
         </div>
       </div>
 
       <!-- Zusatzfelder, nur wenn Teilnahme = Ja -->
-      <div
-        id="extra-fields"
-        class="space-y-4 transition-opacity duration-500 opacity-100"
-      >
-        <input
-          type="number"
-          name="persons"
-          min="1"
-          max="100"
-          value="{{ response.persons if response else '' }}"
-          class="w-full p-3 border-2 border-pink-300 rounded-xl text-center focus:outline-none focus:border-blue-500 transition"
-          placeholder="Anzahl der Personen"
-        />
-        <input
-          type="text"
-          name="drinks"
-          value="{{ response.drinks if response else '' }}"
-          class="w-full p-3 border-2 border-blue-300 rounded-xl text-center focus:outline-none focus:border-pink-500 transition"
-          placeholder="Getränkewünsche"
-        />
+      <div id="extra-fields" class="space-y-6 transition-opacity duration-500 opacity-100">
+        <div>
+          <label for="persons" class="flex items-center gap-2 text-base font-bold text-green-700 mb-2">
+            <span class="text-2xl">👥</span>
+            Personenanzahl
+          </label>
+          <input
+            type="number"
+            name="persons"
+            id="persons"
+            min="1"
+            max="100"
+            value="{{ response.persons if response else '' }}"
+            class="w-full p-3 border-2 border-green-400 rounded-xl text-center focus:outline-none focus:border-blue-500 transition text-lg font-semibold"
+            placeholder="Anzahl der Personen"
+          />
+        </div>
       </div>
 
       <button
         type="submit"
-        class="w-full bg-gradient-to-r from-pink-500 via-blue-500 to-purple-500 text-white py-3 px-4 rounded-xl font-bold shadow-lg hover:scale-105 transition"
+        class="w-full bg-gradient-to-r from-red-500 via-blue-500 to-purple-500 text-white py-3 px-4 rounded-xl font-bold shadow-lg hover:scale-105 transition"
       >
         Rückmeldung speichern 🚀
       </button>
@@ -120,5 +104,4 @@ endblock %} {% block content %}
     no.addEventListener("change", toggleExtraFields);
   });
 </script>
-
 {% endblock %}
