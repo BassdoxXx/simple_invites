@@ -1,112 +1,47 @@
-{% extends "layout_guest.html" %} {% block title %}Einladung beantworten{%
-endblock %} {% block content %}
-<div
-  class="flex items-center justify-center bg-gray-100 pt-6 pb-4 min-h-[70vh]"
->
-  <div
-    class="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-md border-4 border-blue-200"
-  >
+{% extends "layout_guest.html" %}
+
+{% block title %}Einladung beantworten{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-center bg-gray-100 pt-6 pb-4 min-h-[70vh]">
+  <div class="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-md border-4 border-blue-200">
     {% if vereins_name %}
-    <h2
-      class="text-3xl font-extrabold text-pink-600 text-center mb-2 drop-shadow"
-    >
-      {{ vereins_name }}
-    </h2>
-    {% endif %} {% if event_name %}
-    <h3 class="text-xl font-semibold text-blue-700 text-center mb-6">
-      {{ event_name }}
-    </h3>
+      <h2 class="text-3xl font-extrabold text-pink-600 text-center mb-2 drop-shadow">{{ vereins_name }}</h2>
+    {% endif %}
+    {% if event_name %}
+      <h3 class="text-xl font-semibold text-blue-700 text-center mb-6">{{ event_name }}</h3>
     {% endif %}
     <div class="flex justify-center mb-4">
-      <span
-        class="inline-block bg-blue-600 text-white rounded-full px-4 py-2 text-lg font-bold shadow-lg animate-bounce"
-        >🎉 Einladung</span
-      >
+      <span class="inline-block bg-blue-600 text-white rounded-full px-4 py-2 text-lg font-bold shadow-lg animate-bounce">🎉 Einladung</span>
     </div>
-<form method="POST" class="space-y-4">
-  <!-- Teilnahmeauswahl -->
-  <div class="flex flex-col gap-3">
-    <p class="text-center font-semibold text-gray-700">Nehmt ihr teil?</p>
-
-    <div class="flex justify-center gap-4">
-      <label class="w-1/2">
-        <input type="radio" name="attending" value="no" class="peer hidden" id="attending_no"
-          {% if response and response.attending == 'no' %}checked{% endif %}>
-        <div
-          class="w-full text-center border-2 border-red-400 rounded-xl py-3 font-bold shadow transition-all peer-checked:bg-red-500 peer-checked:text-white peer-checked:scale-105 hover:scale-105 cursor-pointer">
-          Nein
-        </div>
-      </label>
-
-      <label class="w-1/2">
-        <input type="radio" name="attending" value="yes" class="peer hidden" id="attending_yes"
-          {% if response and response.attending == 'yes' %}checked{% endif %}>
-        <div
-          class="w-full text-center border-2 border-green-400 rounded-xl py-3 font-bold shadow transition-all peer-checked:bg-green-500 peer-checked:text-white peer-checked:scale-105 hover:scale-105 cursor-pointer">
-          Ja
-        </div>
-      </label>
-    </div>
-  </div>
-
-  <!-- Zusatzfelder, nur wenn Teilnahme = Ja -->
-  <div id="extra-fields" class="space-y-4 transition-opacity duration-500 opacity-100">
-    <input
-      type="number"
-      name="persons"
-      min="1"
-      max="100"
-      value="{{ response.persons if response else '' }}"
-      class="w-full p-3 border-2 border-pink-300 rounded-xl text-center focus:outline-none focus:border-blue-500 transition"
-      placeholder="Anzahl der Personen"
-    />
-    <input
-      type="text"
-      name="drinks"
-      value="{{ response.drinks if response else '' }}"
-      class="w-full p-3 border-2 border-blue-300 rounded-xl text-center focus:outline-none focus:border-pink-500 transition"
-      placeholder="Getränkewünsche"
-    />
-  </div>
-
-  <button
-    type="submit"
-    class="w-full bg-gradient-to-r from-pink-500 via-blue-500 to-purple-500 text-white py-3 px-4 rounded-xl font-bold shadow-lg hover:scale-105 transition"
-  >
-    Rückmeldung speichern 🚀
-  </button>
-</form>
-
-    <br />
-    <p class="text-sm text-center">
-      *Ihr könnt eure Rückmeldung jederzeit bis zum 03.06.2026 ändern!
-    </p>
+    <form method="POST" class="space-y-4">
+      <input
+        type="number"
+        name="persons"
+        min="1"
+        max="100"
+        required
+        value="{{ response.persons if response else '' }}"
+        class="w-full p-3 border-2 border-pink-300 rounded-xl text-center focus:outline-none focus:border-blue-500 transition"
+        placeholder="Anzahl der Personen"
+      />
+      <input
+        type="text"
+        name="drinks"
+        value="{{ response.drinks if response else '' }}"
+        class="w-full p-3 border-2 border-blue-300 rounded-xl text-center focus:outline-none focus:border-pink-500 transition"
+        placeholder="Getränkewünsche"
+      />
+      <select name="attending" class="w-full p-3 border-2 border-purple-300 rounded-xl text-center focus:outline-none focus:border-blue-500 transition">
+        <option value="yes" {% if response and response.attending == 'yes' %}selected{% endif %}>Ja, wir nehmen teil</option>
+        <option value="no" {% if response and response.attending == 'no' %}selected{% endif %}>Nein, wir nehmen nicht teil</option>
+      </select>
+      <button type="submit" class="w-full bg-gradient-to-r from-pink-500 via-blue-500 to-purple-500 text-white py-3 px-4 rounded-xl font-bold shadow-lg hover:scale-105 transition">
+        Rückmeldung speichern 🚀
+      </button>
+    </form>
+    <br>
+    <p class="text-sm text-center">*Ihr könnt eure Rückmeldung jederzeit bis zum 03.06.2026 ändern!</p>
   </div>
 </div>
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const yes = document.getElementById("attending_yes");
-    const no = document.getElementById("attending_no");
-    const extra = document.getElementById("extra-fields");
-
-    function toggleExtraFields() {
-      if (yes.checked) {
-        extra.classList.remove("opacity-0", "pointer-events-none");
-        extra.classList.add("opacity-100");
-      } else {
-        extra.classList.add("opacity-0", "pointer-events-none");
-        extra.classList.remove("opacity-100");
-      }
-    }
-
-    // Initialzustand setzen
-    toggleExtraFields();
-
-    // Event-Listener hinzufügen
-    yes.addEventListener("change", toggleExtraFields);
-    no.addEventListener("change", toggleExtraFields);
-  });
-</script>
-
-
 {% endblock %}
