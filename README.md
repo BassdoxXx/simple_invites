@@ -1,7 +1,5 @@
 # Simple Invites 🧾
 
-![Docker Build & Push](https://github.com/BassdoxXx/simple_invites/actions/workflows/docker.yml/badge.svg)
-
 **Simple Invites** ist ein minimalistisches Einladungs- und Rückmeldetool für Veranstaltungen – ideal z. B. für Feuerwehren, Vereine oder private Feiern.
 
 ## ✨ Features
@@ -130,4 +128,4 @@ simple_invites/
 
 ---
 
-Mit ❤️ und GitHub Copilot gebaut für das 150-jährige Jubiläum der Freiwilligen Feuerwehr Windischletten – oder jedes andere Event.
+Mit ❤️ und GitHub Copilot gebaut für das 150-jährige Jubiläum der Freiwilligen Feuerwehr Windischletten – oder jedes
