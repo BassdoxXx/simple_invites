@@ -40,10 +40,6 @@ def respond(token):
     # Vorhandene Antwort abrufen
     response = Response.query.filter_by(token=token).first()
 
-    # Alte Werte für den Vergleich speichern
-    old_attending = response.attending if response else None
-    old_persons = response.persons if response else None
-
     if request.method == "POST":
         # Verarbeite die Rückmeldung
         attending = request.form.get("attending")
@@ -53,15 +49,6 @@ def respond(token):
             persons = int(persons) if persons else 0
         except ValueError:
             persons = 0
-            
-        # Bei "Nein"-Antworten Personenzahl auf 0 setzen
-        if attending == "no":
-            persons = 0
-            
-            # Bei "Nein" auch manuelle Tischzuweisung entfernen
-            if invite.manuell_gesetzt:
-                invite.manuell_gesetzt = False
-                invite.tischnummer = None
 
         if response:
             response.attending = attending
@@ -73,15 +60,12 @@ def respond(token):
                 persons=persons
             )
             db.session.add(response)
-            
-        # Änderungen speichern
         db.session.commit()
 
-        # Tische neu berechnen, wenn sich der Status oder die Personenzahl ändert
-        attending_changed = old_attending != attending if old_attending else True
-        persons_changed = old_persons != persons if old_persons else True
-
-        if attending_changed or persons_changed:
+        # Tischlogik nur bei Zusage und Personen > 0
+        enable_tables_setting = Setting.query.filter_by(key="enable_tables").first()
+        enable_tables = enable_tables_setting.value == "true" if enable_tables_setting else False
+        if attending == "yes" and persons > 0 and enable_tables:
             assign_all_tables()  # Zentrale Tischvergabe
 
         flash("Antwort gespeichert. Danke!", "success")

@@ -1,7 +1,6 @@
-from flask import Flask, render_template
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
-from flask_wtf.csrf import CSRFProtect  # Neuer Import
 from app.models import User, db
 from app.utils.enforce_password_change import enforce_password_change
 from app.blueprints.auth import auth_bp
@@ -12,13 +11,7 @@ import secrets
 
 def create_app(testing=False):
     app = Flask(__name__)
-    
-    # Pfad anpassen für Windows-Kompatibilität
-    if os.name == 'nt':  # Windows
-        data_dir = os.path.join(os.environ.get('APPDATA', 'C:/temp'), "simple_invites")
-    else:
-        data_dir = "/data/simple_invites"
-        
+    data_dir = "/data/simple_invites"
     db_path = os.path.join(data_dir, "simple_invites.db")
     secret_file = os.path.join(data_dir, "secret_key.txt")
 
@@ -56,43 +49,13 @@ def create_app(testing=False):
     app.register_blueprint(admin_bp, url_prefix="/admin")
     app.register_blueprint(public_bp)
 
-    # CSRF-Schutz aktivieren
-    csrf = CSRFProtect(app)
-    
-    # Für APIs ausschließen (falls nötig)
-    @csrf.exempt
-    def api_exempt():
-        pass  # Definiere hier API-Routen, falls vorhanden
-
-    # Benutzerdefinierte Fehlerseiten
-    @app.errorhandler(404)
-    def page_not_found(e):
-        return render_template('404.html'), 404
-
-    @app.errorhandler(500)
-    def internal_server_error(e):
-        return render_template('500.html'), 500
-        
-    # CSP-Header hinzufügen
-    @app.after_request
-    def add_security_headers(response):
-        # CSP anpassen, um Tailwind CDN zu erlauben
-        if response.mimetype == 'text/html':
-            csp = (
-                "default-src 'self'; "
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com; "
-                "style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; "
-                "font-src 'self' data:; "
-                "img-src 'self' data:; "
-                "connect-src 'self'"
-            )
-            response.headers['Content-Security-Policy'] = csp
-            response.headers['X-Content-Type-Options'] = 'nosniff'
-            response.headers['X-Frame-Options'] = 'SAMEORIGIN'
-            response.headers['X-XSS-Protection'] = '1; mode=block'
-        return response
-
     with app.app_context():
         db.create_all()
-        
+        if not User.query.first():
+            admin_user = User(username="admin")
+            admin_user.set_password("changeme")
+            admin_user.force_password_change = True
+            db.session.add(admin_user)
+            db.session.commit()
+
     return app

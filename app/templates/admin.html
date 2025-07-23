@@ -1,298 +1,223 @@
 {% extends "layout_admin.html" %}
 {% block title %}Adminbereich{% endblock %}
+
 {% block admin_content %}
+<h1 class="text-3xl font-bold mb-6">Einladungen verwalten</h1>
 
 {% if vereins_name %}
-<div class="mb-8">
-  <h2 class="text-2xl font-bold text-blue-700">{{ vereins_name }}</h2>
-</div>
+  <div class="mb-8">
+    <h2 class="text-2xl font-bold text-blue-700">
+      {{ vereins_name }}
+    </h2>
+  </div>
 {% endif %}
-<!-- Dashboard-Statistiken -->
-<div class="mt-8 mb-8">
-  <h2 class="text-2xl font-bold mb-4">Dashboard-Statistiken</h2>
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
-    <div class="bg-blue-600 text-white p-4 rounded-lg shadow">
-      <h5 class="text-lg font-semibold">Einladungen</h5>
-      <p class="text-3xl font-bold">{{ total_invites }}</p>
-    </div>
-    <div class="bg-green-600 text-white p-4 rounded-lg shadow">
-      <h5 class="text-lg font-semibold">Zusagen</h5>
-      <p class="text-3xl font-bold">{{ response_count }}</p>
-    </div>
-    <div class="bg-cyan-600 text-white p-4 rounded-lg shadow">
-      <h5 class="text-lg font-semibold">Personen</h5>
-      <p class="text-3xl font-bold">{{ total_persons }}</p>
-    </div>
-    <div class="bg-yellow-500 text-white p-4 rounded-lg shadow">
-      <h5 class="text-lg font-semibold">Tische belegt</h5>
-      <p class="text-3xl font-bold">{{ used_tables }} / {{ max_tables }}</p>
-    </div>
-  </div>
-</div>
 
-<!-- Gästeliste mit "Neue Einladung" Button -->
-<div class="flex justify-between items-center mb-4">
-  <h1 class="text-3xl font-bold">Gästeliste</h1>
-  <a href="{{ url_for('admin.create_invite') }}" 
-     class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded flex items-center gap-2">
-    <span>➕</span> Neue Einladung
-  </a>
-</div>
-
-<!-- Rest des Codes bleibt unverändert... -->
-<div
-  class="mb-6 p-4 bg-blue-50 rounded-xl shadow flex flex-col md:flex-row md:items-center md:justify-between gap-4"
->
-  <div>
-    <span class="font-bold text-lg text-purple-700">👑 Verein mit den meisten Gästen:</span>
-    <span class="font-extrabold text-xl">{{ top_verein }}</span>
-    <span class="ml-2 text-gray-700">({{ top_persons }} Personen)</span>
-  </div>
-</div>
-
-<!-- Erweitere den Suchbereich um einen Tischfilter -->
-<div class="mb-4 flex gap-2">
-  <input
-    id="searchInput"
-    type="text"
-    placeholder="🔎 Nach Gast suchen..."
-    class="w-full p-2 border rounded"
-    onfocus="this.placeholder=''"
-    onblur="this.placeholder='🔎 Nach Gast suchen...'"
-    onkeyup="filterTable()"
-  />
-  
-  <select id="tischFilter" class="p-2 border rounded bg-white" onchange="filterTable()">
-    <option value="">Alle Tische</option>
-    {% for tisch_nr in tisch_belegung.keys()|sort %}
-      <option value="{{ tisch_nr }}">Tisch {{ tisch_nr }}</option>
-    {% endfor %}
-  </select>
-</div>
-
-<div class="mb-4 flex gap-2">
-  <a
-    href="{{ url_for('admin.export_all_csv') }}"
-    class="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
-  >
-    CSV Export
-  </a>
-</div>
-<div class="overflow-x-auto w-full">
-  <table
-    class="min-w-full table-fixed text-left bg-white rounded shadow"
-    id="invitesTable"
-  >
-    <thead class="bg-gray-200">
-      <tr>
-        <th class="w-1/6 p-3 sortable" data-sort="verein">
-          Gast
-        </th>
-        <th class="w-1/5 p-3 sortable" data-sort="tisch">
-          Tischnummer
-        </th>
-        <th class="w-1/5 p-3">Link</th>
-        <th class="w-1/6 p-3">QR-Code</th>
-        <th class="w-1/12 p-3 sortable" data-sort="status">
-          Antwort
-        </th>
-        <th class="w-1/12 p-3 sortable" data-sort="personen">
-          Personen
-        </th>
-        <th class="w-1/6 p-3 text-center">Aktionen</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for invite in invites %}
-      <tr class="border-t">
-        <td class="p-3 font-medium whitespace-nowrap max-w-xs sm:max-w-none">
-          {{ invite.verein }}
-        </td>
-        <td class="p-3">
-          {% if invite.manuell_gesetzt %}
-            {{ invite.tischnummer }} (manuell)
-          {% elif invite.verein in verein_tische %}
-            {{ verein_tische[invite.verein]|join(', ') }}
-          {% else %}
-            -
-          {% endif %}
-        </td>
-        <td class="p-3 text-sm whitespace-nowrap">
-          <a
-            href="{{ invite.link }}"
-            class="text-blue-600 underline"
-            target="_blank"
-          >Link öffnen</a>
-          <button
-            type="button"
-            class="ml-2 text-gray-500 hover:text-blue-700"
-            data-link="{{ invite.link | e }}"
-            onclick="copyToClipboard(this)"
-            title="Link kopieren"
-          >
-            📋
-          </button>
-        </td>
-        <td class="p-3">
-          <div class="h-16 w-16 flex items-center justify-center">
-            <a
-              href="{{ url_for('static', filename=invite.qr_code_path) }}"
-              download="{{ (invite.verein ~ '_' ~ invite.token)|replace(' ', '_') }}.png"
-              title="QR-Code herunterladen"
-            >
-              <img
-                src="{{ url_for('static', filename=invite.qr_code_path) }}"
-                alt="QR"
-                class="h-16 w-16 object-contain cursor-pointer"
-              />
-            </a>
-          </div>
-        </td>
-        {% set res = responses.get(invite.token) %}
-        <td class="p-3 font-semibold">
-          {% if res %}
-            {% if res.attending == 'yes' %}
-              <span class="text-green-600">Ja</span>
-            {% elif res.attending == 'no' %}
-              <span class="text-red-600">Nein</span>
-            {% else %}
-              {{ res.attending }}
-            {% endif %}
-          {% else %}
-            -
-          {% endif %}
-        </td>
-        <td class="p-3">
-          {% if res and res.attending == 'yes' %}
-            {{ res.persons }}
-          {% else %}
-            -
-          {% endif %}
-        </td>
-        <td class="p-3 text-center">
-          <div class="flex justify-center gap-2 items-center">
-            <a
-              href="{{ url_for('admin.edit_invite', token=invite.token) }}"
-              class="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm transition-all text-sm flex items-center justify-center h-12 px-6"
-              style="min-width: 90px;"
-              title="Einladung bearbeiten"
-            >Bearbeiten</a>
-            <a
-              href="{{ url_for('admin.assign_table', token=invite.token) }}"
-              class="bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg shadow-sm transition-all text-sm flex items-center justify-center h-12 px-6"
-              style="min-width: 90px;"
-              title="Tisch manuell zuweisen"
-            >Tisch zuweisen</a>
-            <form
-              method="POST"
-              action="{{ url_for('admin.delete_invite', token=invite.token) }}"
-              onsubmit="return confirm('FLORIAN! Einladung wirklich löschen?')"
-              class="bg-transparent p-0 m-0 border-0 shadow-none"
-              style="display:inline;"
-            >
-              <input
-                type="hidden"
-                name="csrf_token"
-                value="{{ csrf_token() }}"
-              />
-              <button
+<!-- Formular für Einladung -->
+<div class="mb-8 bg-white p-6 rounded shadow">
+    <form method="POST" action="{{ url_for('admin.index', invite_id=invite.id if invite else None) }}">
+        <h2 class="text-xl font-semibold mb-4">
+            {% if invite %}✏️ Einladung bearbeiten{% else %}➕ Neue Einladung erstellen{% endif %}
+        </h2>
+        <div class="grid md:grid-cols-2 gap-4">
+            <input
+                type="text"
+                name="verein"
+                placeholder="Name des Vereins"
+                value="{{ invite.verein if invite else '' }}"
+                required
+                class="p-2 border rounded w-full"
+            />
+            <input
+                type="text"
+                name="token"
+                placeholder="Token (optional)"
+                value="{{ invite.token if invite else '' }}"
+                class="p-2 border rounded w-full"
+            />
+        </div>
+        <div class="mt-4 flex justify-end">
+            <button
                 type="submit"
-                class="bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-sm transition-all text-sm flex items-center justify-center h-12 px-6"
-                style="min-width: 90px;"
-                title="Einladung löschen"
-              >
-                Löschen
-              </button>
-            </form>
-          </div>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+                class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+            >
+                {% if invite %}Änderungen speichern{% else %}Einladung erstellen{% endif %}
+            </button>
+        </div>
+    </form>
 </div>
 
+<!-- Gästeliste -->
+<div class="flex justify-between items-center mb-4">
+    <h1 class="text-3xl font-bold">Gästeliste</h1>
+    <span class="text-3xl text-gray-700">
+        📬 Rückmeldungen: <strong>{{ response_count }}</strong> von <strong>{{ total_invites }}</strong> |
+        👥 Personen: <strong>{{ total_persons }}</strong>
+    </span>
+</div>
 
-
-<!-- Tischübersicht NUR anzeigen, wenn enable_tables == "true" -->
 {% if enable_tables == "true" %}
-<div class="mt-8 mb-8">
-  <h2 class="text-2xl font-bold mb-4">Tischbelegung im Detail</h2>
-  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
-    {% for tisch_nummer, tisch_data in tisch_belegung.items() %}
-      <div class="bg-white p-4 rounded-lg shadow tisch-card" data-tisch="{{ tisch_nummer }}">
-        <h3 class="text-xl font-semibold border-b pb-2 mb-3">
-          Tisch {{ tisch_nummer }}
-          <span class="float-right text-sm py-1 px-2 rounded-full 
-            {% if tisch_data.belegt == max_persons_per_table %}
-              bg-red-100 text-red-800
-            {% elif tisch_data.belegt > max_persons_per_table * 0.7 %}
-              bg-yellow-100 text-yellow-800
-            {% else %}
-              bg-green-100 text-green-800
-            {% endif %}">
-            {{ tisch_data.belegt }}/{{ max_persons_per_table }}
-          </span>
-        </h3>
-        <ul class="divide-y">
-          {% for verein, personen in tisch_data.vereine %}
-            <li class="py-2 flex justify-between">
-              <span class="font-medium">{{ verein }}</span>
-              <span class="text-gray-600">{{ personen }} {% if personen == 1 %}Person{% else %}Personen{% endif %}</span>
-            </li>
-          {% endfor %}
-        </ul>
-      </div>
-    {% endfor %}
-  </div>
-</div>
-
-<!-- Grafiken für Tischbelegung - ebenfalls nur anzeigen wenn enable_tables == "true" -->
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-  <div class="bg-white p-4 rounded-lg shadow">
-    <h3 class="text-xl font-semibold mb-4 text-gray-800">Tischbelegung</h3>
-    <div class="h-64">
-      <canvas id="tableOccupationChart"></canvas>
+  <div class="mb-6 p-4 bg-blue-50 rounded-xl shadow flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <span class="font-bold text-lg text-blue-700">🪑 Tische insgesamt:</span>
+      <span class="font-extrabold text-2xl">{{ max_tables }}</span>
+      <span class="ml-4 font-bold text-lg text-green-700">Belegt:</span>
+      <span class="font-extrabold text-2xl">{{ used_tables }}</span>
+    </div>
+    <div>
+      <span class="font-bold text-lg text-purple-700">👑 Verein mit den meisten Gästen:</span>
+      <span class="font-extrabold text-xl">{{ top_verein }}</span>
+      <span class="ml-2 text-gray-700">({{ top_persons }} Personen)</span>
     </div>
   </div>
-  <div class="bg-white p-4 rounded-lg shadow">
-    <h3 class="text-xl font-semibold mb-4 text-gray-800">
-      Top Vereine nach Personen
-    </h3>
-    <div class="h-64">
-      <canvas id="topVereinsChart"></canvas>
-    </div>
-  </div>
-</div>
 {% endif %}
+
+<div class="mb-4">
+    <input
+        id="searchInput"
+        type="text"
+        placeholder="🔎 Nach Gast suchen..."
+        class="w-full p-2 border rounded"
+        onfocus="this.placeholder=''"
+        onblur="this.placeholder='🔎 Nach Gast suchen...'"
+        onkeyup="filterTable()"
+    />
+</div>
+<div class="mb-4 flex gap-2">
+    <a href="{{ url_for('admin.export_all_csv') }}"
+       class="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700">
+        CSV Export
+    </a>
+</div>
+<div class="overflow-x-auto w-full min-w-[1000px]">
+    <table class="min-w-full table-fixed text-left bg-white rounded shadow">
+        <thead class="bg-gray-200">
+            <tr>
+                <th class="w-1/6 p-3">Gast</th>
+                <th class="w-1/5 p-3">Tischnummer</th>
+                <th class="w-1/5 p-3">Link</th>
+                <th class="w-1/6 p-3">QR-Code</th>
+                <th class="w-1/12 p-3">Antwort</th>
+                <th class="w-1/12 p-3">Personen</th>
+                <th class="w-1/6 p-3">Zuletzt aktualisiert</th>
+                <th class="w-1/12 p-3 text-center"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for invite in invites %}
+            <tr class="border-t">
+                <td class="p-3 font-medium whitespace-nowrap max-w-xs sm:max-w-none">{{ invite.verein }}</td>
+                <td class="p-3">
+                  {% if invite.manuell_gesetzt %}
+                    {{ invite.tischnummer }}
+                  {% elif invite.verein in verein_tische %}
+                    {{ verein_tische[invite.verein]|join(', ') }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td class="p-3 text-sm whitespace-nowrap">
+                    <a href="{{ invite.link }}" class="text-blue-600 underline" target="_blank">Link öffnen</a>
+                    <button type="button"
+                        class="ml-2 text-gray-500 hover:text-blue-700"
+                        data-link="{{ invite.link | e }}"
+                        onclick="copyToClipboard(this)"
+                        title="Link kopieren">
+                        📋
+                    </button>
+                </td>
+            <td class="p-3">
+                <div class="h-16 w-16 flex items-center justify-center">
+                <a href="{{ url_for('static', filename=invite.qr_code_path) }}"
+                download="{{ (invite.verein ~ '_' ~ invite.token)|replace(' ', '_') }}.png"
+                title="QR-Code herunterladen">
+                    <img src="{{ url_for('static', filename=invite.qr_code_path) }}"
+                        alt="QR"
+                        class="h-16 w-16 object-contain cursor-pointer" />
+                </a>
+                </div>
+            </td>
+                {% set res = responses.get(invite.token) %}
+                <td class="p-3 font-semibold">
+                    {% if res %}
+                        {% if res.attending == 'yes' %}
+                            <span class="text-green-600">Ja</span>
+                        {% elif res.attending == 'no' %}
+                            <span class="text-red-600">Nein</span>
+                        {% else %}
+                            {{ res.attending }}
+                        {% endif %}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td class="p-3">{{ res.persons if res else "-" }}</td>
+                <td class="p-3 text-sm">{{ res.timestamp.strftime('%d.%m.%Y %H:%M') if res else "-" }}</td>
+                <td class="p-3 text-center">
+  <div class="flex justify-center gap-2">
+    <a
+      href="{{ url_for('admin.edit_invite', token=invite.token) }}"
+      class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-4 rounded-lg shadow-sm transition-all text-sm"
+      title="Einladung bearbeiten"
+    >Bearbeiten</a>
+    <form method="POST" action="{{ url_for('admin.delete_invite', token=invite.token) }}" onsubmit="return confirm('FLORIAN! Einladung wirklich löschen?')">
+      <button
+        type="submit"
+        class="bg-red-600 hover:bg-red-700 text-white font-semibold py-1.5 px-4 rounded-lg shadow-sm transition-all text-sm"
+        title="Einladung löschen"
+      >Löschen
+      </button>
+    </form>
+  </div>
+</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
 <script>
-  window.chartData = {
-    tableData: [{{ used_tables }}, {{ max_tables - used_tables }}],
-    {% if verein_tische is defined and verein_persons is defined %}
-    vereinsLabels: {{ verein_tische|tojson }},
-    vereinsData: {{ verein_persons|tojson }}
-    {% else %}
-    vereinsLabels: [],
-    vereinsData: []
-    {% endif %}
-  };
+    function filterTable() {
+        const input = document.getElementById("searchInput").value.toLowerCase();
+        const rows = document.querySelectorAll("table tbody tr");
+
+        rows.forEach((row) => {
+            const guestCell = row.querySelector("td:first-child");
+            const text = guestCell ? guestCell.textContent.toLowerCase() : "";
+            row.style.display = text.includes(input) ? "" : "none";
+        });
+    }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
-<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+function copyToClipboard(btn) {
+    const text = btn.dataset.link;
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(function() {
+            showCopySuccess(btn);
+        }, function(err) {
+            alert("Kopieren fehlgeschlagen: " + err);
+        });
+    } else {
+        // Fallback für unsichere Kontexte/ältere Browser
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";  // Verhindert Scrollen
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        try {
+            document.execCommand('copy');
+            showCopySuccess(btn);
+        } catch (err) {
+            alert("Kopieren fehlgeschlagen: " + err);
+        }
+        document.body.removeChild(textarea);
+    }
+}
 
-<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
-
-<style>
-  .sortable {
-    cursor: pointer;
-    user-select: none;
-  }
-  .sort-asc::after {
-    content: " ↑";
-  }
-  .sort-desc::after {
-    content: " ↓";
-  }
-</style>
+function showCopySuccess(btn) {
+    const old = btn.innerHTML;
+    btn.innerHTML = "✅";
+    setTimeout(() => { btn.innerHTML = old; }, 1200);
+}
+</script>
 {% endblock %}
