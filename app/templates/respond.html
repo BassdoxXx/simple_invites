@@ -3,82 +3,45 @@
 {% block title %}Einladung beantworten{% endblock %}
 
 {% block content %}
-<!-- Dynamischer Einladungstext -->
-<h1 class="text-3xl font-bold mb-6 text-center">{{ invite_header|safe }}</h1>
-<h2 class="text-2xl font-bold mb-2">{{ vereins_name }} lädt ein!</h2>
-<h3 class="text-xl mb-4">{{ event_name }}</h3>
-<br>
-<p class="mb-6 text-gray-700 text-center">
-    Liebe <strong>{{ invite.verein }}</strong>,<br>
-    hier könnt ihr eure Teilnahme bestätigen und eure Angaben <strong>bis zwei Tage vor dem Fest</strong> ändern. <br>
-    Scannt dazu einfach wieder den <strong>QR-Code</strong> oder gebt den <strong>Einladungscode (Token)</strong> erneut ein, den ihr erhalten habt.
-</p>
-
-<form method="POST">
-    <h1 class="text-2xl font-bold mb-4">{{ invite_header }}</h1>
-    <p class="mb-4">Hallo, {{ invite.verein }}! Bitte teile uns eure Rückmeldung mit.</p>
-
-    <div class="mb-4">
-        <label class="block font-medium mb-1">Nehmt ihr teil?</label>
-        <select name="attending" class="w-full p-2 border rounded">
-            <option value="yes" {% if response and response.attending == 'yes' %}selected{% endif %}>Ja</option>
-            <option value="no" {% if response and response.attending == 'no' %}selected{% endif %}>Nein</option>
-        </select>
+<div class="flex items-center justify-center bg-gray-100 pt-6 pb-4 min-h-[70vh]">
+  <div class="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-md border-4 border-blue-200">
+    {% if vereins_name %}
+      <h2 class="text-3xl font-extrabold text-pink-600 text-center mb-2 drop-shadow">{{ vereins_name }}</h2>
+    {% endif %}
+    {% if event_name %}
+      <h3 class="text-xl font-semibold text-blue-700 text-center mb-6">{{ event_name }}</h3>
+    {% endif %}
+    <div class="flex justify-center mb-4">
+      <span class="inline-block bg-blue-600 text-white rounded-full px-4 py-2 text-lg font-bold shadow-lg animate-bounce">🎉 Einladung</span>
     </div>
-
-    <div class="mb-4">
-        <label class="block font-medium mb-1">Anzahl der Personen</label>
-        <input
-            type="number"
-            name="persons"
-            min="1"
-            max="100"
-            required
-            value="{{ response.persons if response else '' }}"
-            class="w-full p-2 border rounded"
-            placeholder="z.B. 5"
-        />
-    </div>
-
-    <div class="mb-4">
-        <label class="block font-medium mb-1">Getränkewünsche</label>
-        <input
-            type="text"
-            name="drinks"
-            value="{{ response.drinks if response else '' }}"
-            class="w-full p-2 border rounded"
-            placeholder="z.B. Wasser, Cola"
-        />
-    </div>
-
-    <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
-        Rückmeldung speichern
-    </button>
-</form>
-
-<!-- Hinweis für Nutzer ohne Antwort -->
-{% if not response %}
-<p class="mt-6 text-sm text-blue-700 text-center italic">
-    Ihr könnt eure Antwort später jederzeit erneut ändern - bis zwei Tage vor dem Fest.
-</p>
-{% endif %}
-
-<script>
-    // Funktion zum Ein- und Ausblenden der zusätzlichen Felder
-    function toggleFields(attending) {
-        const additionalFields = document.getElementById("additional-fields");
-
-        if (attending === "no") {
-            additionalFields.style.display = "none"; // Felder ausblenden
-        } else {
-            additionalFields.style.display = "block"; // Felder einblenden
-        }
-    }
-
-    // Initialer Zustand basierend auf der aktuellen Auswahl
-    document.addEventListener("DOMContentLoaded", () => {
-        const attending = document.querySelector('input[name="attending"]:checked');
-        toggleFields(attending ? attending.value : null);
-    });
-</script>
+    <form method="POST" class="space-y-4">
+      <input
+        type="number"
+        name="persons"
+        min="1"
+        max="100"
+        required
+        value="{{ response.persons if response else '' }}"
+        class="w-full p-3 border-2 border-pink-300 rounded-xl text-center focus:outline-none focus:border-blue-500 transition"
+        placeholder="Anzahl der Personen"
+      />
+      <input
+        type="text"
+        name="drinks"
+        value="{{ response.drinks if response else '' }}"
+        class="w-full p-3 border-2 border-blue-300 rounded-xl text-center focus:outline-none focus:border-pink-500 transition"
+        placeholder="Getränkewünsche"
+      />
+      <select name="attending" class="w-full p-3 border-2 border-purple-300 rounded-xl text-center focus:outline-none focus:border-blue-500 transition">
+        <option value="yes" {% if response and response.attending == 'yes' %}selected{% endif %}>Ja, wir nehmen teil</option>
+        <option value="no" {% if response and response.attending == 'no' %}selected{% endif %}>Nein, wir nehmen nicht teil</option>
+      </select>
+      <button type="submit" class="w-full bg-gradient-to-r from-pink-500 via-blue-500 to-purple-500 text-white py-3 px-4 rounded-xl font-bold shadow-lg hover:scale-105 transition">
+        Rückmeldung speichern 🚀
+      </button>
+    </form>
+    <br>
+    <p class="text-sm text-center">*Ihr könnt eure Rückmeldung jederzeit bis zum 03.06.2026 ändern!</p>
+  </div>
+</div>
 {% endblock %}
