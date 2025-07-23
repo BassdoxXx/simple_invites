@@ -1,24 +1,93 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, Response as FlaskResponse
 from flask_login import login_required
 from app.models import Invite, Response, Setting, TableAssignment, db
-from app.utils.table_utils import assign_all_tables, get_blocked_tischnummern, get_next_free_tischnummer, build_verein_tische_map
-from app.utils.settings_utils import get_setting, get_multiple_settings, get_max_tables
+from app.utils.qr_utils import generate_qr as generate_qr_code  # Korrekter Import
+from app.utils.tisch_utils import assign_all_tables
 import os
-from datetime import datetime, date
+import csv
+import io
+import uuid
+import random
+import string
+from datetime import datetime, timezone
 from sqlalchemy import func
-from functools import lru_cache  # Für die cache_clear Methode
+from functools import lru_cache
 
 admin_bp = Blueprint("admin", __name__)
 
-# Hinweis: Die Hilfsfunktionen für Einstellungen und Tischverwaltung wurden in 
-# app/utils/settings_utils.py und app/utils/table_utils.py ausgelagert
+# Cache settings for 60 seconds to reduce DB queries
+# Why: Settings rarely change but are accessed frequently
+@lru_cache(maxsize=32)
+def get_setting(key, default=None, expire_after=60):
+    setting = Setting.query.filter_by(key=key).first()
+    return setting.value if setting else default
+
+def get_multiple_settings(setting_definitions):
+    """Get multiple settings at once, using cached values.
+    
+    Why: Reduces code duplication when multiple settings are needed
+    in a single context, while still benefiting from caching.
+    
+    Args:
+        setting_definitions: Dict mapping setting keys to their default values
+        
+    Returns:
+        Dict containing all requested settings with their values
+    """
+    return {key: get_setting(key, default) for key, default in setting_definitions.items()}
+
+def get_max_tables():
+    """Get maximum number of tables from settings.
+    
+    Why: This is a frequently accessed value that impacts table assignments
+    and validations throughout the application.
+    """
+    max_tables_setting = get_setting("max_tables", "90")
+    return int(max_tables_setting) if max_tables_setting.isdigit() else 90
+
+def get_blocked_tischnummern():
+    """Get all currently occupied table numbers.
+    
+    Why: We need to track all assigned table numbers to prevent duplicates,
+    both from manual assignments and automatic distribution.
+    """
+    invites = Invite.query.all()
+    # First collect manually assigned tables from invites
+    blocked = set(int(i.tischnummer) for i in invites if i.tischnummer and i.tischnummer.isdigit())
+    # Then add tables from automatic assignments
+    blocked |= set(int(t.tischnummer) for t in TableAssignment.query.all() if str(t.tischnummer).isdigit())
+    return blocked
+
+def get_next_free_tischnummer(blocked, max_tables):
+    """Find the next available table number.
+    
+    Why: When creating new invites or resetting table assignments,
+    we need to find the lowest available table number to ensure efficient
+    use of available tables.
+    """
+    for i in range(1, max_tables + 1):
+        if i not in blocked:
+            return str(i)
+    return "1"  # Fallback if all tables are taken
+
+def build_verein_tische_map():
+    """Create a mapping of associations to their assigned tables.
+    
+    Why: This centralized function creates a consistent representation of
+    table assignments that's used in multiple templates.
+    """
+    table_assignments = TableAssignment.query.all()
+    verein_tische = {}
+    for ta in table_assignments:
+        verein_tische.setdefault(ta.verein, []).append(str(ta.tischnummer))
+    return verein_tische
 
 # Bestehende Index-Route ohne Formularverarbeitung
 @admin_bp.route("/", methods=["GET"])
 @login_required
 def index():
     """Admin dashboard for managing invitations."""
-    invites = Invite.query.order_by(Invite.verein).all()
+    invites = Invite.query.all()
     responses = {r.token: r for r in Response.query.all()}
     max_tables = get_max_tables()
 
@@ -26,9 +95,7 @@ def index():
     settings = get_multiple_settings({
         "enable_tables": "false",
         "max_tables": "90",
-        "vereins_name": "",
-        "event_name": "",
-        "event_date": ""
+        "vereins_name": ""
     })
     
     enable_tables = settings["enable_tables"]
@@ -77,32 +144,14 @@ def index():
     # Sortiere die Tische nach Nummer
     tisch_belegung = dict(sorted(tisch_belegung.items(), key=lambda item: int(item[0])))
 
-    # Calculate days until event
-    days_until_event = None
-    event_date_str = settings["event_date"]
-    event_name = settings["event_name"]
-    
-    if event_date_str:
-        from datetime import datetime, date
-        try:
-            event_date = datetime.strptime(event_date_str, "%Y-%m-%d").date()
-            today = date.today()
-            days_until_event = (event_date - today).days
-        except ValueError:
-            # Falls das Datumsformat nicht korrekt ist, ignorieren
-            pass
-    
     return render_template(
-        "admin_dashboard.html",
+        "admin.html",
         invites=invites,
         responses=responses,
         response_count=response_count,
         total_invites=total_invites,
         total_persons=total_persons,
         vereins_name=settings["vereins_name"],
-        event_name=event_name,
-        event_date=event_date_str,
-        days_until_event=days_until_event,
         enable_tables=enable_tables,
         max_tables=max_tables,  # ist jetzt ein int!
         used_tables=used_tables,  # ebenfalls int
@@ -135,58 +184,43 @@ def create_invite():
         if form_token and len(form_token) == 8:
             token = form_token
         else:
-            # Generiere einen einzigartigen Token
-            from app.utils.csv_utils import generate_unique_token
-            token = generate_unique_token()
+            # Generiere einen 8-stelligen alphanumerischen Token (kleinbuchstaben und Zahlen)
+            token = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
+            
+            # Stelle sicher, dass der Token einzigartig ist
+            while Invite.query.filter_by(token=token).first():
+                token = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
         
         if invite:
             # Bestehende Einladung aktualisieren
-            
-            # Prüfen, ob der neue Vereinsname bereits existiert (wenn er geändert wurde)
-            if verein.lower() != invite.verein.lower():
-                existing_invite = Invite.query.filter(func.lower(Invite.verein) == verein.lower()).first()
-                if existing_invite and existing_invite.id != invite.id:
-                    flash(f"Ein Eintrag für '{verein}' existiert bereits. Bitte wählen Sie einen anderen Namen.", "danger")
-                    return render_template(
-                        "admin_invite_create.html", 
-                        invite=invite,
-                        vereins_name=get_setting("vereins_name", "")
-                    )
-            
             invite.verein = verein
             if form_token:  # Nur aktualisieren, wenn explizit ein neuer Token eingegeben wurde
                 invite.token = token
                 
-                # URL aktualisieren, wenn sich der Token ändert
-                base_url = get_setting("base_url", "http://localhost:5000")
-                invite.link = f"{base_url}/respond/{token}"
-                
             db.session.commit()
+            
+            # QR-Code neu generieren, falls sich der Verein oder Token geändert hat
+            qr_file_name = f"qr_{invite.token}.png"
+            qr_path = os.path.join("app", "static", "qr_codes", qr_file_name)
+            
+            base_url = get_setting("base_url", "http://localhost:5000")
+            invite_url = f"{base_url}/respond/{invite.token}"
+            generate_qr_code(invite_url, qr_path)
             
             flash(f"Einladung für {verein} wurde aktualisiert.", "success")
         else:
-            # Prüfen, ob der Vereinsname bereits existiert
-            existing_invite = Invite.query.filter(func.lower(Invite.verein) == verein.lower()).first()
-            if existing_invite:
-                flash(f"Ein Eintrag für '{verein}' existiert bereits. Bitte wählen Sie einen anderen Namen.", "danger")
-                return render_template(
-                    "admin_invite_create.html", 
-                    invite=None,
-                    vereins_name=get_setting("vereins_name", "")
-                )
-                
             # Neue Einladung erstellen
-            base_url = get_setting("base_url", "http://localhost:5000")
-            invite_url = f"{base_url}/respond/{token}"
-            
-            # Erstelle die neue Einladung mit allen erforderlichen Feldern
-            new_invite = Invite(
-                verein=verein, 
-                token=token,
-                link=invite_url  # Hier den Link hinzufügen
-            )
+            new_invite = Invite(verein=verein, token=token)
             db.session.add(new_invite)
             db.session.commit()
+            
+            # QR-Code generieren
+            qr_file_name = f"qr_{token}.png"
+            qr_path = os.path.join("app", "static", "qr_codes", qr_file_name)
+            
+            base_url = get_setting("base_url", "http://localhost:5000")
+            invite_url = f"{base_url}/respond/{token}"
+            generate_qr_code(invite_url, qr_path)
             
             flash(f"Neue Einladung für {verein} wurde erstellt.", "success")
         
@@ -197,7 +231,7 @@ def create_invite():
     vereins_name = vereins_name_setting.value if vereins_name_setting else ""
     
     return render_template(
-        "admin_invite_create.html", 
+        "admin_create_invite.html", 
         invite=invite,
         vereins_name=vereins_name
     )
@@ -218,7 +252,15 @@ def delete_invite(token):
         TableAssignment.query.filter_by(verein=invite.verein).delete()
         db.session.commit()
         
-        # Remove the invitation
+        # Then try to remove the QR code file
+        try:
+            qr_path = os.path.join("app", "static", invite.qr_code_path)
+            if os.path.exists(qr_path):
+                os.remove(qr_path)
+        except Exception as e:
+            print(f"⚠️ QR-Code konnte nicht gelöscht werden: {e}")
+        
+        # Finally remove the invitation
         db.session.delete(invite)
     
     # Remove response if exists
@@ -242,7 +284,6 @@ def settings():
         "invite_header": "",
         "event_name": "",
         "vereins_name": "",
-        "event_date": "",  # Format: YYYY-MM-DD für das Event-Datum
         "max_tables": "90",
         "max_persons_per_table": "10",
         "enable_tables": "false"
@@ -251,12 +292,7 @@ def settings():
     if request.method == "POST":
         # Process all settings from the form
         for key in setting_definitions:
-            # Spezialbehandlung für Checkboxen: wenn nicht gesendet, setze auf "false"
-            if key == "enable_tables":
-                value = "true" if key in request.form else "false"
-            else:
-                value = request.form.get(key, setting_definitions[key])
-                
+            value = request.form.get(key, setting_definitions[key])
             setting = Setting.query.filter_by(key=key).first()
             
             if setting:
@@ -269,11 +305,6 @@ def settings():
         # Clear setting cache to ensure latest values are used
         get_setting.cache_clear()
         
-        # Neu berechnen der Tischzuweisung, wenn die Tischverwaltung aktiviert ist
-        if request.form.get("enable_tables") == "true":
-            from app.utils.table_utils import assign_all_tables
-            assign_all_tables()
-        
         flash("Einstellungen gespeichert", "success")
         return redirect(url_for("admin.settings"))
 
@@ -281,7 +312,7 @@ def settings():
     current_settings = get_multiple_settings(setting_definitions)
     
     return render_template(
-        "admin_settings_edit.html",
+        "admin_settings.html",
         **current_settings,
     )
 
@@ -289,16 +320,37 @@ def settings():
 @login_required
 def export_all_csv():
     """Export all invitations and responses to a CSV file."""
-    from app.utils.csv_utils import generate_all_invites_csv
-    
     invites = Invite.query.all()
     responses = {r.token: r for r in Response.query.all()}
     
-    # Hilfsfunktion für die URL-Generierung
-    def get_full_link(token):
-        return url_for("public.respond", token=token, _external=True)
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter=';')
     
-    return generate_all_invites_csv(invites, responses, get_full_link)
+    # Entferne "Getränke" aus den Headerzeilen
+    writer.writerow([
+        "Verein", "Tischnummer", "Link", "Antwort", 
+        "Personen", "Zuletzt aktualisiert"
+    ])
+    
+    for invite in invites:
+        res = responses.get(invite.token)
+        full_link = url_for("public.respond", token=invite.token, _external=True)
+        
+        writer.writerow([
+            invite.verein,
+            invite.tischnummer,
+            full_link,
+            res.attending if res else "",
+            res.persons if res else "",
+            res.timestamp.strftime('%d.%m.%Y %H:%M') if res and res.timestamp else ""
+        ])
+    
+    output.seek(0)
+    return FlaskResponse(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=einladungen.csv"}
+    )
 
 @admin_bp.route("/export/csv/<token>")
 @login_required
@@ -308,16 +360,33 @@ def export_single_csv(token):
     Why: Allows exporting details about specific invitations for focused
     record keeping or communication purposes.
     """
-    from app.utils.csv_utils import generate_single_invite_csv
-    
     invite = Invite.query.filter_by(token=token).first_or_404()
     res = Response.query.filter_by(token=token).first()
     
-    # Hilfsfunktion für die URL-Generierung
-    def get_full_link(token):
-        return url_for("public.respond", token=token, _external=True)
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter=';')
     
-    return generate_single_invite_csv(invite, res, get_full_link)
+    writer.writerow([
+        "Verein", "Tischnummer", "Link", "Antwort", 
+        "Personen", "Zuletzt aktualisiert"  # "Getränke" entfernen
+    ])
+    
+    full_link = url_for("public.respond", token=invite.token, _external=True)
+    writer.writerow([
+        invite.verein,
+        invite.tischnummer,
+        full_link,
+        res.attending if res else "",
+        res.persons if res else "",
+        res.timestamp.strftime('%d.%m.%Y %H:%M') if res and res.timestamp else ""
+    ])
+    
+    output.seek(0)
+    return FlaskResponse(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment;filename=einladung_{invite.verein}_{invite.token}.csv"}
+    )
 
 # Die neue edit_invite Route sollte so lauten:
 @admin_bp.route("/edit/<token>", methods=["GET", "POST"])
@@ -327,52 +396,11 @@ def edit_invite(token):
     invite = Invite.query.filter_by(token=token).first_or_404()
     return redirect(url_for("admin.create_invite", invite_id=invite.id))
 
-@admin_bp.route("/import-csv", methods=["POST"])
-@login_required
-def import_csv():
-    """Import multiple invitations from a CSV file.
-    
-    The CSV file should have a column named 'Verein' or just one column
-    with the association/guest names. For each name, a new invitation
-    will be created with an automatically generated token.
-    Duplicate names will be skipped.
-    """
-    from app.utils.csv_utils import validate_csv_file, process_csv_import
-    
-    if 'csv_file' not in request.files:
-        flash("Keine Datei ausgewählt.", "danger")
-        return redirect(url_for("admin.create_invite"))
-    
-    csv_file = request.files['csv_file']
-    has_header = request.form.get('has_header') == 'on'
-    
-    # Validiere die CSV-Datei
-    is_valid, content, dialect, error_redirect = validate_csv_file(csv_file)
-    if not is_valid:
-        return error_redirect
-    
-    # Verarbeite den Import
-    base_url = get_setting("base_url", "http://localhost:5000")
-    imported_count = process_csv_import(content, dialect, has_header, base_url)
-    
-    if imported_count > 0:
-        flash(f"{imported_count} Einladungen wurden erfolgreich importiert.", "success")
-    else:
-        flash("Es wurden keine neuen Einladungen importiert. Möglicherweise existieren alle Namen bereits.", "warning")
-        
-    return redirect(url_for("admin.index"))
-
 @admin_bp.route("/assign_table/<token>", methods=["GET", "POST"])
 @login_required
 def assign_table(token):
     """Manually assign a table to an invitation."""
     invite = Invite.query.filter_by(token=token).first_or_404()
-    
-    # Überprüfe, ob Tischverwaltung aktiviert ist
-    enable_tables = get_setting("enable_tables", "false")
-    if enable_tables != "true":
-        flash("Die Tischverwaltung ist deaktiviert. Bitte aktivieren Sie sie zuerst in den Einstellungen.", "warning")
-        return redirect(url_for("admin.settings"))
     
     # Holen der relevanten Tischdaten und Einstellungen
     max_tables = int(get_setting("max_tables", "90"))
@@ -418,7 +446,7 @@ def assign_table(token):
     current_table = invite.tischnummer if invite.manuell_gesetzt else None
     
     return render_template(
-        "admin_table_assign.html", 
+        "assign_table.html", 
         invite=invite, 
         blocked=set(blocked_tables),  # Duplikate entfernen
         max_tables=max_tables,

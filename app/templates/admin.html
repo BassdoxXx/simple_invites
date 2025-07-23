@@ -3,23 +3,9 @@
 {% block admin_content %}
 
 {% if vereins_name %}
-<div class="mb-2">
+<div class="mb-8">
   <h2 class="text-2xl font-bold text-blue-700">{{ vereins_name }}</h2>
 </div>
-{% endif %}
-
-<!-- Event Countdown -->
-{% if days_until_event is not none and event_name %}
-  <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4 rounded-lg shadow mb-8 text-center">
-    <h3 class="text-xl font-bold">{{ event_name }}</h3>
-    {% if days_until_event > 0 %}
-      <p class="text-3xl font-extrabold mt-2">🎉 Noch {{ days_until_event }} {{ 'Tage' if days_until_event != 1 else 'Tag' }} bis zum Event! 🎉</p>
-    {% elif days_until_event == 0 %}
-      <p class="text-3xl font-extrabold mt-2">🎊 Das Event findet heute statt! 🎊</p>
-    {% else %}
-      <p class="text-xl mt-2">Das Event hat am {{ event_date }} stattgefunden.</p>
-    {% endif %}
-  </div>
 {% endif %}
 <!-- Dashboard-Statistiken -->
 <div class="mt-8 mb-8">
@@ -102,12 +88,11 @@
         <th class="w-1/6 p-3 sortable" data-sort="verein">
           Gast
         </th>
-        {% if enable_tables == "true" %}
         <th class="w-1/5 p-3 sortable" data-sort="tisch">
           Tischnummer
         </th>
-        {% endif %}
         <th class="w-1/5 p-3">Link</th>
+        <th class="w-1/6 p-3">QR-Code</th>
         <th class="w-1/12 p-3 sortable" data-sort="status">
           Antwort
         </th>
@@ -123,7 +108,6 @@
         <td class="p-3 font-medium whitespace-nowrap max-w-xs sm:max-w-none">
           {{ invite.verein }}
         </td>
-        {% if enable_tables == "true" %}
         <td class="p-3">
           {% if invite.manuell_gesetzt %}
             {{ invite.tischnummer }} (manuell)
@@ -132,8 +116,6 @@
           {% else %}
             -
           {% endif %}
-        </td>
-        {% endif %}
         </td>
         <td class="p-3 text-sm whitespace-nowrap">
           <a
@@ -151,7 +133,21 @@
             📋
           </button>
         </td>
-
+        <td class="p-3">
+          <div class="h-16 w-16 flex items-center justify-center">
+            <a
+              href="{{ url_for('static', filename=invite.qr_code_path) }}"
+              download="{{ (invite.verein ~ '_' ~ invite.token)|replace(' ', '_') }}.png"
+              title="QR-Code herunterladen"
+            >
+              <img
+                src="{{ url_for('static', filename=invite.qr_code_path) }}"
+                alt="QR"
+                class="h-16 w-16 object-contain cursor-pointer"
+              />
+            </a>
+          </div>
+        </td>
         {% set res = responses.get(invite.token) %}
         <td class="p-3 font-semibold">
           {% if res %}
@@ -181,14 +177,12 @@
               style="min-width: 90px;"
               title="Einladung bearbeiten"
             >Bearbeiten</a>
-            {% if enable_tables == "true" %}
             <a
               href="{{ url_for('admin.assign_table', token=invite.token) }}"
               class="bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg shadow-sm transition-all text-sm flex items-center justify-center h-12 px-6"
               style="min-width: 90px;"
               title="Tisch manuell zuweisen"
             >Tisch zuweisen</a>
-            {% endif %}
             <form
               method="POST"
               action="{{ url_for('admin.delete_invite', token=invite.token) }}"
@@ -253,7 +247,39 @@
   </div>
 </div>
 
+<!-- Grafiken für Tischbelegung - ebenfalls nur anzeigen wenn enable_tables == "true" -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+  <div class="bg-white p-4 rounded-lg shadow">
+    <h3 class="text-xl font-semibold mb-4 text-gray-800">Tischbelegung</h3>
+    <div class="h-64">
+      <canvas id="tableOccupationChart"></canvas>
+    </div>
+  </div>
+  <div class="bg-white p-4 rounded-lg shadow">
+    <h3 class="text-xl font-semibold mb-4 text-gray-800">
+      Top Vereine nach Personen
+    </h3>
+    <div class="h-64">
+      <canvas id="topVereinsChart"></canvas>
+    </div>
+  </div>
+</div>
 {% endif %}
+
+<script>
+  window.chartData = {
+    tableData: [{{ used_tables }}, {{ max_tables - used_tables }}],
+    {% if verein_tische is defined and verein_persons is defined %}
+    vereinsLabels: {{ verein_tische|tojson }},
+    vereinsData: {{ verein_persons|tojson }}
+    {% else %}
+    vereinsLabels: [],
+    vereinsData: []
+    {% endif %}
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
 
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 
