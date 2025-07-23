@@ -77,7 +77,8 @@ def respond(token):
         invite_header=invite_header_value,
         response=response,
         event_name=event_name_setting.value if event_name_setting else "",
-        vereins_name=vereins_name_setting.value if vereins_name_setting else ""
+        vereins_name=vereins_name_setting.value if vereins_name_setting else "",
+        gast_name=invite.verein  # ✅ korrektes Feld aus dem Modell
     )
 
 @public_bp.route("/impressum")
