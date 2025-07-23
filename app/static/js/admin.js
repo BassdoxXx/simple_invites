@@ -67,68 +67,52 @@ function filterTable() {
 
 // Sortierfunktion für die Tabelle
 document.addEventListener("DOMContentLoaded", function () {
-  // Funktion zum Sortieren der Tabelle
-  function sortTable(sortBy, ascending, headerElement = null) {
-    const table = document.getElementById("invitesTable");
-    const tbody = table.querySelector("tbody");
-    const rows = Array.from(tbody.querySelectorAll("tr"));
-
-    // Alle Sortierklassen entfernen und die richtige setzen
-    document.querySelectorAll(".sortable").forEach((h) => {
-      h.classList.remove("sort-asc", "sort-desc");
-    });
-
-    if (headerElement) {
-      headerElement.classList.add(ascending ? "sort-asc" : "sort-desc");
-    }
-
-    // Zeilen sortieren
-    rows.sort(function (a, b) {
-      let valA, valB;
-
-      if (sortBy === "verein") {
-        valA = a.cells[0].textContent.toLowerCase();
-        valB = b.cells[0].textContent.toLowerCase();
-      } else if (sortBy === "tisch") {
-        const tischA = a.cells[1].textContent;
-        const tischB = b.cells[1].textContent;
-        valA = tischA === "-" ? 9999 : parseInt(tischA) || 9999;
-        valB = tischB === "-" ? 9999 : parseInt(tischB) || 9999;
-      } else if (sortBy === "personen") {
-        valA = parseInt(a.cells[5].textContent) || 0;
-        valB = parseInt(b.cells[5].textContent) || 0;
-      } else if (sortBy === "status") {
-        valA = a.cells[4].textContent;
-        valB = b.cells[4].textContent;
-      }
-
-      if (ascending) {
-        return valA > valB ? 1 : -1;
-      } else {
-        return valA < valB ? 1 : -1;
-      }
-    });
-
-    // Neu sortierte Zeilen einfügen
-    rows.forEach(function (row) {
-      tbody.appendChild(row);
-    });
-  }
-
-  // Standardmäßig nach Vereinsnamen sortieren (aufsteigend)
-  const vereinsHeader = document.querySelector('.sortable[data-sort="verein"]');
-  if (vereinsHeader) {
-    sortTable("verein", true, vereinsHeader);
-  }
-
-  // Event-Listener für Klicks auf Spaltenüberschriften
   document.querySelectorAll(".sortable").forEach(function (header) {
     header.addEventListener("click", function () {
+      const table = document.getElementById("invitesTable");
       const sortBy = this.dataset.sort;
-      // Sortierrichtung umschalten
-      const ascending = !this.classList.contains("sort-asc");
-      sortTable(sortBy, ascending, this);
+      const tbody = table.querySelector("tbody");
+      const rows = Array.from(tbody.querySelectorAll("tr"));
 
+      // Sortierrichtung umschalten
+      const ascending = this.classList.contains("sort-asc");
+      document.querySelectorAll(".sortable").forEach((h) => {
+        h.classList.remove("sort-asc", "sort-desc");
+      });
+
+      this.classList.add(ascending ? "sort-desc" : "sort-asc");
+
+      // Zeilen sortieren basierend auf der ausgewählten Spalte
+      rows.sort(function (a, b) {
+        let valA, valB;
+
+        if (sortBy === "verein") {
+          valA = a.cells[0].textContent;
+          valB = b.cells[0].textContent;
+        } else if (sortBy === "tisch") {
+          const tischA = a.cells[1].textContent;
+          const tischB = b.cells[1].textContent;
+          valA = tischA === "-" ? 9999 : parseInt(tischA) || 9999;
+          valB = tischB === "-" ? 9999 : parseInt(tischB) || 9999;
+        } else if (sortBy === "personen") {
+          valA = parseInt(a.cells[5].textContent) || 0;
+          valB = parseInt(b.cells[5].textContent) || 0;
+        } else if (sortBy === "status") {
+          valA = a.cells[4].textContent;
+          valB = b.cells[4].textContent;
+        }
+
+        if (ascending) {
+          return valA > valB ? 1 : -1;
+        } else {
+          return valA < valB ? 1 : -1;
+        }
+      });
+
+      // Neu sortierte Zeilen einfügen
+      rows.forEach(function (row) {
+        tbody.appendChild(row);
+      });
     });
   });
 });

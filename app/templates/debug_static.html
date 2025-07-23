@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Static Files</title>
+</head>
+<body>
+    <h1>Static Folder Path</h1>
+    <p>{{ static_folder }}</p>
+    
+    <h2>Static Files</h2>
+    <ul>
+    {% for file in static_files %}
+        <li>
+            <a href="{{ url_for('static', filename=file) }}">{{ file }}</a>
+        </li>
+    {% endfor %}
+    </ul>
+</body>
+</html>
