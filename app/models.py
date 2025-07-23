@@ -19,6 +19,12 @@ class Invite(db.Model):
     link = db.Column(db.String(512), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     manuell_gesetzt = db.Column(db.Boolean, default=False)
+    
+    def __init__(self, **kwargs):
+        # Explicitly ignore qr_code_path
+        if 'qr_code_path' in kwargs:
+            del kwargs['qr_code_path']
+        super(Invite, self).__init__(**kwargs)
 
 class Response(db.Model):
     """
