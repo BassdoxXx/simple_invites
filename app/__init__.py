@@ -13,9 +13,11 @@ import secrets
 def create_app(testing=False):
     app = Flask(__name__)
     
-    # Datenbank im Projektverzeichnis speichern
-    data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'instance'))
-    os.makedirs(data_dir, exist_ok=True)
+    # Pfad anpassen für Windows-Kompatibilität
+    if os.name == 'nt':  # Windows
+        data_dir = os.path.join(os.environ.get('APPDATA', 'C:/temp'), "simple_invites")
+    else:
+        data_dir = "/data/simple_invites"
         
     db_path = os.path.join(data_dir, "simple_invites.db")
     secret_file = os.path.join(data_dir, "secret_key.txt")
@@ -91,36 +93,6 @@ def create_app(testing=False):
         return response
 
     with app.app_context():
-        # Datenbank initialisieren
         db.create_all()
-        
-        # Prüfen, ob Admin-Benutzer existiert
-        from app.models import User
-        from datetime import datetime
-        
-        user_count = User.query.count()
-        if user_count == 0:
-            # Admin-Benutzer erstellen
-            admin_user = User(
-                username="admin",
-                force_password_change=True
-            )
-            # Setze das Passwort
-            admin_user.set_password("changeme")
-            
-            db.session.add(admin_user)
-            db.session.commit()
-            
-            print("="*50)
-            print("ADMIN USER CREATED:")
-            print("Username: admin")
-            print("Password: changeme")
-            print("Please change your password after first login.")
-            print("="*50)
-            
-        # Füge einen globalen Kontext-Prozessor hinzu
-        @app.context_processor
-        def inject_now():
-            return {'now': datetime.now()}
         
     return app
