@@ -20,14 +20,14 @@
 
 ## 🚀 Nutzung
 
-### 1. Clonen
+1. **Clonen**:
 
 ```bash
 git clone https://github.com/BassdoxXx/simple_invites.git
 cd simple_invites
 ```
 
-### 2. Lokale Installation
+2. **Installieren** (lokal):
 
 ```bash
 python -m venv venv
@@ -36,51 +36,19 @@ pip install -r requirements.txt
 python -m app.main
 ```
 
-### 3. Zugriff
+3. **Zugreifen**:
 
 Öffne [http://localhost:5000](http://localhost:5000) im Browser.
 
 - Login: `admin`
 - Passwort: `changeme` (beim ersten Login wird Änderung erzwungen)
 
-### 4. Docker (empfohlen für Produktion)
-
-#### Docker Compose
-
-Erstelle eine Datei `docker-compose.yml` mit folgendem Inhalt:
-
-```yaml
-services:
-  simple_invites:
-    image: bassdoxxx/simple_invites:latest
-    container_name: simple_invites
-    restart: unless-stopped
-    ports:
-      - "5000:5000"
-    volumes:
-      - ./app/static:/app/app/static
-      - ./data/simple_invites:/data/simple_invites
-    environment:
-      - FLASK_ENV=production
-      - SECRET_KEY=dein_geheimer_schluessel
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-    networks:
-      - core_net
-```
-
-Starte die Anwendung mit:
+4. **Docker (optional)**:
 
 ```bash
-docker compose up -d
+docker build -t simple_invites .
+docker run -p 5000:5000 simple_invites
 ```
-
-Die Datenbank und alle persistenten Daten werden im Ordner `./data/simple_invites` auf deinem Dockerhost gespeichert.
-
-#### Automatischer Build & Push (optional)
-
-Das Image kann automatisch per GitHub Actions gebaut und zu Docker Hub gepusht werden.  
-Lege dazu die Zugangsdaten als Secrets im Repository an (`DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`).
 
 ## ⚙️ Ordnerstruktur
 
@@ -96,10 +64,9 @@ simple_invites/
 │   ├── templates/           # HTML-Templates (Tailwind)
 │   └── static/              # Statische Dateien (CSS, QR-Codes)
 │
-├── data/simple_invites/     # Persistente Daten (DB, Schlüssel, etc.)
+├── data/simple_invites.db   # SQLite-Datenbank (wird beim ersten Start erstellt)
 ├── requirements.txt         # Python-Abhängigkeiten
-├── Dockerfile               # Docker-Setup
-└── docker-compose.yml       # Docker Compose Konfiguration
+└── Dockerfile               # Docker-Setup
 ```
 
 ## 🛠️ Konfiguration
@@ -112,10 +79,6 @@ simple_invites/
   - Beim ersten Login wird eine Passwortänderung erzwungen.
   - Passwörter werden sicher gehasht gespeichert.
 
-- **SECRET_KEY**:
-  - Für Produktion muss ein sicherer Schlüssel gesetzt werden (Umgebungsvariable oder automatische Generierung beim ersten Start).
-  - Wird im Volume gespeichert und bleibt beim Neustart erhalten.
-
 ## 📖 Hinweise
 
 - **QR-Codes**:
@@ -123,9 +86,9 @@ simple_invites/
   - Beim Löschen einer Einladung wird der zugehörige QR-Code automatisch entfernt.
 
 - **Datenbank**:
-  - Die SQLite-Datenbank und alle Einstellungen werden im Ordner `data/simple_invites/` gespeichert.
+  - Die SQLite-Datenbank wird automatisch im Ordner `data/` erstellt.
   - Für produktive Umgebungen kann eine andere Datenbank (z. B. PostgreSQL) konfiguriert werden.
 
 ---
 
-Mit ❤️ und GitHub Copilot gebaut für das 150-jährige Jubiläum der Freiwilligen Feuerwehr Windischletten – oder jedes
+Mit ❤️ und CoPilot gebaut für das 150-jährige Jubiläum der Freiwilligen Feuerwehr Windischletten – oder jedes andere Event.
