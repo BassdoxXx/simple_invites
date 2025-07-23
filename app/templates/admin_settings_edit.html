@@ -4,9 +4,14 @@
 
 {% block content %}
 
-<div class="w-full mx-auto mt-12 bg-white shadow-lg rounded-xl p-8">
+<div class="max-w-xl mx-auto mt-12 bg-white shadow-lg rounded-xl p-8">
   <h1 class="text-2xl font-bold mb-4">🔔 Einstellungen</h1>
-  <form method="POST" class="space-y-6 w-full">
+  <p class="text-sm text-gray-600 mb-4">
+    Hinweis: Wenn du kein WhatsApp nutzen möchtest, kannst du die Felder leer lassen.
+    In diesem Fall wird keine Nachricht verschickt.
+  </p>
+
+  <form method="POST" class="space-y-6">
     <!-- CSRF-Token hinzufügen -->
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
@@ -43,6 +48,7 @@
       <input type="checkbox" id="enable_tables" name="enable_tables" value="true"
              {% if enable_tables == "true" %}checked{% endif %} class="mr-2">
       <label for="enable_tables">Tischverwaltung aktivieren</label>
+      <span class="ml-2 text-sm text-gray-500">(Wird automatisch angewendet, wenn aktiviert)</span>
     </div>
     <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
       Einstellungen speichern
