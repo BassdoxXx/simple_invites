@@ -13,6 +13,19 @@ import secrets
 def create_app(testing=False):
     app = Flask(__name__)
     
+    # SERVER_NAME und URL_SCHEME aus Umgebungsvariablen setzen
+    app_hostname = os.environ.get("APP_HOSTNAME")
+    if app_hostname:
+        if app_hostname.startswith("https://"):
+            app.config['SERVER_NAME'] = app_hostname.replace("https://", "")
+            app.config['PREFERRED_URL_SCHEME'] = 'https'
+        elif app_hostname.startswith("http://"):
+            app.config['SERVER_NAME'] = app_hostname.replace("http://", "")
+            app.config['PREFERRED_URL_SCHEME'] = 'http'
+        else:
+            app.config['SERVER_NAME'] = app_hostname
+            app.config['PREFERRED_URL_SCHEME'] = 'https'
+    
     # Datenbank im Projektverzeichnis speichern
     data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'instance'))
     os.makedirs(data_dir, exist_ok=True)
@@ -123,4 +136,7 @@ def create_app(testing=False):
         def inject_now():
             return {'now': datetime.now()}
         
+    app.config["SERVER_NAME"] = "invites.ffw-windischletten.de"  # oder mit Port: "deinedomain.de:443"
+    app.config["PREFERRED_URL_SCHEME"] = "https"
+    
     return app
