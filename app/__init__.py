@@ -1,7 +1,7 @@
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
-from flask_wtf.csrf import CSRFProtect
+from flask_wtf.csrf import CSRFProtect  # Neuer Import
 from app.models import User, db
 from app.utils.enforce_password_change import enforce_password_change
 from app.blueprints.auth import auth_bp
@@ -26,11 +26,15 @@ def create_app(testing=False):
             app.config['SERVER_NAME'] = app_hostname
             app.config['PREFERRED_URL_SCHEME'] = 'https'
     
-    # Datenordner für persistente Daten
+    # Datenbank im Projektverzeichnis speichern
     data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'instance'))
     os.makedirs(data_dir, exist_ok=True)
-    
+        
+    db_path = os.path.join(data_dir, "simple_invites.db")
     secret_file = os.path.join(data_dir, "secret_key.txt")
+
+    # Ordner anlegen, falls nicht vorhanden
+    os.makedirs(data_dir, exist_ok=True)
 
     # SECRET_KEY laden oder generieren
     secret_key = os.environ.get("SECRET_KEY")
@@ -44,14 +48,7 @@ def create_app(testing=False):
                 f.write(secret_key)
     app.config['SECRET_KEY'] = secret_key
 
-    # Datenbank-Konfiguration - SQLite für Einfachheit und Zuverlässigkeit
-    if testing:
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-    else:
-        # SQLite-Datei im persistenten data_dir
-        db_path = os.path.join(data_dir, "simple_invites.db")
-        app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{db_path}"
-    
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:' if testing else f"sqlite:///{db_path}"
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     db.init_app(app)
@@ -139,4 +136,7 @@ def create_app(testing=False):
         def inject_now():
             return {'now': datetime.now()}
         
+    app.config["SERVER_NAME"] = "invites.ffw-windischletten.de"  # oder mit Port: "deinedomain.de:443"
+    app.config["PREFERRED_URL_SCHEME"] = "https"
+    
     return app

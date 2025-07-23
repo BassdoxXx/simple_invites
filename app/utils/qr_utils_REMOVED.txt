@@ -1,2 +1,0 @@
-# Diese Datei wurde entfernt - QR-Codes sind nicht mehr Teil der Anwendung
-# Falls QR-Codes wieder benötigt werden, können sie als separate Funktion hinzugefügt werden
