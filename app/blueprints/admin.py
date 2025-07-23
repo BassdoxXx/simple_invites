@@ -1,102 +1,95 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, Response as FlaskResponse
+from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Response as FlaskResponse
 from flask_login import login_required
-from app.models import Invite, Response, Setting, TableAssignment, db
+from app.models import Invite, Response, Setting, db
 from app.utils.qr_utils import generate_qr
-from app.utils.tisch_utils import assign_all_tables
 import os
 import csv
 import io
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import func
 
 admin_bp = Blueprint("admin", __name__)
-
-def get_max_tables():
-    max_tables_setting = Setting.query.filter_by(key="max_tables").first()
-    return int(max_tables_setting.value) if max_tables_setting and max_tables_setting.value.isdigit() else 90
-
-def get_blocked_tischnummern():
-    invites = Invite.query.all()
-    blocked = set(int(i.tischnummer) for i in invites if i.tischnummer and i.tischnummer.isdigit())
-    blocked |= set(int(t.tischnummer) for t in TableAssignment.query.all() if str(t.tischnummer).isdigit())
-    return blocked
-
-def get_next_free_tischnummer(blocked, max_tables):
-    for i in range(1, max_tables + 1):
-        if i not in blocked:
-            return str(i)
-    return "1"
 
 @admin_bp.route("/", methods=["GET", "POST"])
 @login_required
 def index():
+    """
+    Displays the admin dashboard with all invites and handles the creation or editing of invites.
+    """
     invites = Invite.query.all()
     responses = {r.token: r for r in Response.query.all()}
-    max_tables = get_max_tables()
-
-    if request.method == "POST":
-        verein = request.form.get("verein")
-        token = request.form.get("token") or uuid.uuid4().hex[:10]
-
-        # Name-Validierung
-        if Invite.query.filter(Invite.verein == verein).first():
-            flash(f"Der Name '{verein}' wird bereits verwendet.", "danger")
-            return redirect(url_for("admin.index"))
-
-        # Automatische Tischnummer-Vergabe
-        blocked = get_blocked_tischnummern()
-        tischnummer = get_next_free_tischnummer(blocked, max_tables)
-
-        # Einladung speichern
-        link = url_for("public.respond", token=token, _external=True)
-        qr_path = generate_qr(link, verein, token)
-        invite = Invite(
-            verein=verein,
-            tischnummer=tischnummer,
-            token=token,
-            link=link,
-            qr_code_path=qr_path,
-            created_at=datetime.now(timezone.utc)
-        )
-        db.session.add(invite)
-        db.session.commit()
-        assign_all_tables()
-        flash("Einladung erfolgreich gespeichert.", "success")
-        return redirect(url_for("admin.index"))
-
-    # Statistiken und Anzeige
     response_count = len(responses)
     total_invites = len(invites)
-    total_persons = sum(r.persons for r in responses.values() if r.attending == 'yes' and r.persons)
+    total_persons = sum(
+        r.persons for r in responses.values()
+        if r.attending == 'yes' and r.persons
+    )
     phone = Setting.query.filter_by(key="whatsapp_phone").first()
     apikey = Setting.query.filter_by(key="whatsapp_apikey").first()
     whatsapp_active = phone and apikey and phone.value and apikey.value
 
-    enable_tables_setting = Setting.query.filter_by(key="enable_tables").first()
-    max_tables_setting = Setting.query.filter_by(key="max_tables").first()
-    enable_tables = enable_tables_setting.value if enable_tables_setting else "false"
-    max_tables = max_tables_setting.value if max_tables_setting else "90"
+    # Bearbeiten oder Erstellen einer Einladung
+    invite_id = request.args.get("invite_id")
+    invite = Invite.query.get(invite_id) if invite_id else None
 
-    used_tables = len(set([ta.tischnummer for ta in TableAssignment.query.all()]))
+    if request.method == "POST":
+        verein = request.form.get("verein")
+        tischnummer = request.form.get("tischnummer")
+        token = request.form.get("token") or uuid.uuid4().hex[:10]  # Automatisch generieren, falls leer
 
-    top_verein = "-"
-    top_persons = 0
-    if enable_tables == "true":
-        top = db.session.query(TableAssignment.verein, func.sum(TableAssignment.personen))\
-            .group_by(TableAssignment.verein)\
-            .order_by(func.sum(TableAssignment.personen).desc())\
-            .first()
-        if top:
-            top_verein = top[0]
-            top_persons = top[1]
+        # Validierung: Prüfen, ob der Name des Gastes bereits existiert
+        existing_name = Invite.query.filter(Invite.verein == verein, Invite.id != (invite.id if invite else None)).first()
+        if existing_name:
+            flash(f"Der Name '{verein}' wird bereits verwendet.", "danger")
+            return redirect(url_for("admin.index", invite_id=invite_id))
+
+        # Validierung: Prüfen, ob die Tischnummer bereits existiert
+        if tischnummer:
+            existing_tischnummer = Invite.query.filter(Invite.tischnummer == tischnummer, Invite.id != (invite.id if invite else None)).first()
+            if existing_tischnummer:
+                flash(f"Tischnummer {tischnummer} wird bereits verwendet.", "danger")
+                return redirect(url_for("admin.index", invite_id=invite_id))
+
+        # Wenn keine Tischnummer angegeben ist, finde die nächste freie Zahl
+        if not tischnummer:
+            # Alle bestehenden Tischnummern abrufen und sortieren
+            existing_tischnummern = sorted(int(i.tischnummer) for i in invites if i.tischnummer.isdigit())
+            
+            if existing_tischnummern:
+                # Suche die nächste freie Zahl
+                for i in range(1, max(existing_tischnummern) + 2):
+                    if i not in existing_tischnummern:
+                        tischnummer = str(i)
+                        break
+            else:
+                # Standardwert, falls keine Tischnummern existieren
+                tischnummer = "1"
+
+        if invite:
+            # Bearbeiten einer bestehenden Einladung
+            invite.verein = verein
+            invite.tischnummer = tischnummer
+            invite.token = token
+        else:
+            # Erstellen einer neuen Einladung
+            link = url_for("public.respond", token=token, _external=True)
+            qr_path = generate_qr(link, verein, token)
+            invite = Invite(
+                verein=verein,
+                tischnummer=tischnummer,
+                token=token,
+                link=link,
+                qr_code_path=qr_path,
+                created_at=datetime.now(timezone.utc)
+            )
+            db.session.add(invite)
+
+        db.session.commit()
+        flash("Einladung erfolgreich gespeichert.", "success")
+        return redirect(url_for("admin.index"))
 
     vereins_name_setting = Setting.query.filter_by(key="vereins_name").first()
-    table_assignments = TableAssignment.query.all()
-    verein_tische = {}
-    for ta in table_assignments:
-        verein_tische.setdefault(ta.verein, []).append(str(ta.tischnummer))
-
     return render_template(
         "admin.html",
         invites=invites,
@@ -105,23 +98,25 @@ def index():
         response_count=response_count,
         total_invites=total_invites,
         total_persons=total_persons,
+        invite=invite,
         vereins_name=vereins_name_setting.value if vereins_name_setting else "",
-        enable_tables=enable_tables,
-        max_tables=max_tables,
-        used_tables=used_tables,
-        top_verein=top_verein,
-        top_persons=top_persons,
-        verein_tische=verein_tische,
     )
 
 @admin_bp.route("/delete/<token>", methods=["POST"])
 @login_required
 def delete_invite(token):
+    """
+    Deletes an invite and its associated QR code and response, if any.
+
+    Args:
+        token (str): The unique token of the invite to be deleted.
+
+    Returns:
+        Redirect to the admin dashboard after the invite is deleted.
+    """
     invite = Invite.query.filter_by(token=token).first()
     response = Response.query.filter_by(token=token).first()
     if invite:
-        TableAssignment.query.filter_by(verein=invite.verein).delete()
-        db.session.commit()
         try:
             qr_path = os.path.join("app", "static", invite.qr_code_path)
             if os.path.exists(qr_path):
@@ -132,7 +127,6 @@ def delete_invite(token):
     if response:
         db.session.delete(response)
     db.session.commit()
-    assign_all_tables()
     flash("Einladung gelöscht", "success")
     return redirect(url_for("admin.index"))
 
@@ -144,9 +138,6 @@ def settings():
     invite_header_setting = Setting.query.filter_by(key="invite_header").first()
     event_name_setting = Setting.query.filter_by(key="event_name").first()
     vereins_name_setting = Setting.query.filter_by(key="vereins_name").first()
-    max_tables_setting = Setting.query.filter_by(key="max_tables").first()
-    max_persons_setting = Setting.query.filter_by(key="max_persons_per_table").first()
-    enable_tables_setting = Setting.query.filter_by(key="enable_tables").first()
 
     if request.method == "POST":
         phone = request.form.get("phone", "")
@@ -154,44 +145,47 @@ def settings():
         invite_header = request.form.get("invite_header", "")
         event_name = request.form.get("event_name", "")
         vereins_name = request.form.get("vereins_name", "")
-        max_tables = request.form.get("max_tables", "90")
-        max_persons_per_table = request.form.get("max_persons_per_table", "10")
-        enable_tables = request.form.get("enable_tables", "false")
 
-        def save_setting(setting, key, value):
-            if setting:
-                setting.value = value
-            else:
-                db.session.add(Setting(key=key, value=value))
-
-        save_setting(phone_setting, "whatsapp_phone", phone)
-        save_setting(apikey_setting, "whatsapp_apikey", apikey)
-        save_setting(invite_header_setting, "invite_header", invite_header)
-        save_setting(event_name_setting, "event_name", event_name)
-        save_setting(vereins_name_setting, "vereins_name", vereins_name)
-        save_setting(max_tables_setting, "max_tables", max_tables)
-        save_setting(max_persons_setting, "max_persons_per_table", max_persons_per_table)
-        save_setting(enable_tables_setting, "enable_tables", enable_tables)
-
+        if phone_setting:
+            phone_setting.value = phone
+        else:
+            db.session.add(Setting(key="whatsapp_phone", value=phone))
+        if apikey_setting:
+            apikey_setting.value = apikey
+        else:
+            db.session.add(Setting(key="whatsapp_apikey", value=apikey))
+        if invite_header_setting:
+            invite_header_setting.value = invite_header
+        else:
+            db.session.add(Setting(key="invite_header", value=invite_header))
+        if event_name_setting:
+            event_name_setting.value = event_name
+        else:
+            db.session.add(Setting(key="event_name", value=event_name))
+        if vereins_name_setting:
+            vereins_name_setting.value = vereins_name
+        else:
+            db.session.add(Setting(key="vereins_name", value=vereins_name))
         db.session.commit()
         flash("Einstellungen gespeichert", "success")
         return redirect(url_for("admin.settings"))
+
+    # WhatsApp ist nur aktiv, wenn beide Felder ausgefüllt sind
+    whatsapp_active = (
+        phone_setting and apikey_setting and phone_setting.value and apikey_setting.value
+    )
 
     return render_template(
         "admin_settings.html",
         phone=phone_setting.value if phone_setting else "",
         apikey=apikey_setting.value if apikey_setting else "",
-        invite_header=invite_header_setting.value if invite_header_setting else "",
+        invite_header_value=invite_header_setting.value if invite_header_setting else "",
         event_name=event_name_setting.value if event_name_setting else "",
         vereins_name=vereins_name_setting.value if vereins_name_setting else "",
-        max_tables=max_tables_setting.value if max_tables_setting else "90",
-        max_persons_per_table=max_persons_setting.value if max_persons_setting else "10",
-        enable_tables=enable_tables_setting.value if enable_tables_setting else "false",
-        whatsapp_active=(
-            phone_setting and apikey_setting and phone_setting.value and apikey_setting.value
-        )
+        whatsapp_active=whatsapp_active
     )
-
+    
+    
 @admin_bp.route("/export/csv")
 @login_required
 def export_all_csv():
@@ -242,38 +236,4 @@ def export_single_csv(token):
         output.getvalue(),
         mimetype="text/csv",
         headers={"Content-Disposition": f"attachment;filename=einladung_{invite.verein}_{invite.token}.csv"}
-    )
-
-@admin_bp.route("/edit/<token>", methods=["GET", "POST"])
-@login_required
-def edit_invite(token):
-    invite = Invite.query.filter_by(token=token).first_or_404()
-    max_tables = get_max_tables()
-
-    if request.method == "POST":
-        verein = request.form.get("verein")
-        # tischnummer = request.form.get("tischnummer")  # Entfernen!
-        token = request.form.get("token") or uuid.uuid4().hex[:10]
-
-        # Name-Validierung
-        if Invite.query.filter(Invite.verein == verein, Invite.id != invite.id).first():
-            flash(f"Der Name '{verein}' wird bereits verwendet.", "danger")
-            return redirect(url_for("admin.edit_invite", token=token))
-
-        # Automatische Vergabe:
-        blocked = get_blocked_tischnummern()
-        blocked.discard(int(invite.tischnummer))  # Eigene Tischnummer beim Bearbeiten ignorieren
-        tischnummer = get_next_free_tischnummer(blocked, max_tables)
-
-        invite.verein = verein
-        invite.tischnummer = tischnummer
-        invite.manuell_gesetzt = bool(request.form.get("manuell_gesetzt"))
-        db.session.commit()
-        assign_all_tables()
-        flash("Einladung erfolgreich bearbeitet.", "success")
-        return redirect(url_for("admin.index"))
-
-    return render_template(
-        "edit_invite.html",
-        invite=invite
     )

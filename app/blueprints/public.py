@@ -1,6 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from app.models import Setting, Invite, Response, TableAssignment, db
-from app.utils.tisch_utils import assign_all_tables
+from app.models import Setting, Invite, Response, db
 from datetime import datetime, timezone
 
 public_bp = Blueprint("public", __name__)
@@ -43,31 +42,30 @@ def respond(token):
     if request.method == "POST":
         # Verarbeite die Rückmeldung
         attending = request.form.get("attending")
-        persons = request.form.get("persons", "").strip()
+        persons = request.form.get("persons", "").strip()  # Standardwert leerer String
+        drinks = request.form.get("drinks", "").strip()
 
+        # Validierung: Konvertiere `persons` nur, wenn es nicht leer ist
         try:
             persons = int(persons) if persons else 0
         except ValueError:
             persons = 0
 
         if response:
+            # Aktualisiere die bestehende Antwort
             response.attending = attending
             response.persons = persons
+            response.drinks = drinks
         else:
+            # Neue Antwort erstellen
             response = Response(
                 token=token,
                 attending=attending,
-                persons=persons
+                persons=persons,
+                drinks=drinks
             )
             db.session.add(response)
         db.session.commit()
-
-        # Tischlogik nur bei Zusage und Personen > 0
-        enable_tables_setting = Setting.query.filter_by(key="enable_tables").first()
-        enable_tables = enable_tables_setting.value == "true" if enable_tables_setting else False
-        if attending == "yes" and persons > 0 and enable_tables:
-            assign_all_tables()  # Zentrale Tischvergabe
-
         flash("Antwort gespeichert. Danke!", "success")
         return redirect(url_for("public.respond", token=token))
 
@@ -81,7 +79,7 @@ def respond(token):
         response=response,
         event_name=event_name_setting.value if event_name_setting else "",
         vereins_name=vereins_name_setting.value if vereins_name_setting else "",
-        gast_name=invite.verein
+        gast_name=invite.verein  # ✅ korrektes Feld aus dem Modell
     )
 
 @public_bp.route("/impressum")

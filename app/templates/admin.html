@@ -29,6 +29,13 @@
             />
             <input
                 type="text"
+                name="tischnummer"
+                placeholder="Tischnummer (optional)"
+                value="{{ invite.tischnummer if invite else '' }}"
+                class="p-2 border rounded w-full"
+            />
+            <input
+                type="text"
                 name="token"
                 placeholder="Token (optional)"
                 value="{{ invite.token if invite else '' }}"
@@ -55,22 +62,6 @@
     </span>
 </div>
 
-{% if enable_tables == "true" %}
-  <div class="mb-6 p-4 bg-blue-50 rounded-xl shadow flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-    <div>
-      <span class="font-bold text-lg text-blue-700">🪑 Tische insgesamt:</span>
-      <span class="font-extrabold text-2xl">{{ max_tables }}</span>
-      <span class="ml-4 font-bold text-lg text-green-700">Belegt:</span>
-      <span class="font-extrabold text-2xl">{{ used_tables }}</span>
-    </div>
-    <div>
-      <span class="font-bold text-lg text-purple-700">👑 Verein mit den meisten Gästen:</span>
-      <span class="font-extrabold text-xl">{{ top_verein }}</span>
-      <span class="ml-2 text-gray-700">({{ top_persons }} Personen)</span>
-    </div>
-  </div>
-{% endif %}
-
 <div class="mb-4">
     <input
         id="searchInput"
@@ -85,7 +76,7 @@
 <div class="mb-4 flex gap-2">
     <a href="{{ url_for('admin.export_all_csv') }}"
        class="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700">
-        CSV Export
+        Gesamte Liste als CSV exportieren
     </a>
 </div>
 <div class="overflow-x-auto w-full min-w-[1000px]">
@@ -98,6 +89,7 @@
                 <th class="w-1/6 p-3">QR-Code</th>
                 <th class="w-1/12 p-3">Antwort</th>
                 <th class="w-1/12 p-3">Personen</th>
+                <th class="w-1/6 p-3">Getränke</th>
                 <th class="w-1/6 p-3">Zuletzt aktualisiert</th>
                 <th class="w-1/12 p-3 text-center"></th>
             </tr>
@@ -106,15 +98,7 @@
             {% for invite in invites %}
             <tr class="border-t">
                 <td class="p-3 font-medium whitespace-nowrap max-w-xs sm:max-w-none">{{ invite.verein }}</td>
-                <td class="p-3">
-                  {% if invite.manuell_gesetzt %}
-                    {{ invite.tischnummer }}
-                  {% elif invite.verein in verein_tische %}
-                    {{ verein_tische[invite.verein]|join(', ') }}
-                  {% else %}
-                    -
-                  {% endif %}
-                </td>
+                <td class="p-3">{{ invite.tischnummer }}</td>
                 <td class="p-3 text-sm whitespace-nowrap">
                     <a href="{{ invite.link }}" class="text-blue-600 underline" target="_blank">Link öffnen</a>
                     <button type="button"
@@ -151,24 +135,18 @@
                     {% endif %}
                 </td>
                 <td class="p-3">{{ res.persons if res else "-" }}</td>
+                <td class="p-3 text-sm">{{ res.drinks if res else "-" }}</td>
                 <td class="p-3 text-sm">{{ res.timestamp.strftime('%d.%m.%Y %H:%M') if res else "-" }}</td>
                 <td class="p-3 text-center">
-  <div class="flex justify-center gap-2">
-    <a
-      href="{{ url_for('admin.edit_invite', token=invite.token) }}"
-      class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-4 rounded-lg shadow-sm transition-all text-sm"
-      title="Einladung bearbeiten"
-    >Bearbeiten</a>
-    <form method="POST" action="{{ url_for('admin.delete_invite', token=invite.token) }}" onsubmit="return confirm('FLORIAN! Einladung wirklich löschen?')">
-      <button
-        type="submit"
-        class="bg-red-600 hover:bg-red-700 text-white font-semibold py-1.5 px-4 rounded-lg shadow-sm transition-all text-sm"
-        title="Einladung löschen"
-      >Löschen
-      </button>
-    </form>
-  </div>
-</td>
+<form method="POST" action="{{ url_for('admin.delete_invite', token=invite.token) }}" onsubmit="return confirm('FLORIAN! Einladung wirklich löschen?')">
+  <button
+    type="submit"
+    class="bg-red-600 hover:bg-red-700 text-white font-semibold py-1.5 px-4 rounded-lg shadow-sm transition-all text-sm"
+    title="Einladung löschen"
+  >Löschen
+  </button>
+</form>
+                </td>
             </tr>
             {% endfor %}
         </tbody>

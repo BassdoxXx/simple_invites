@@ -24,6 +24,13 @@
             <input type="text" name="verein" value="{{ invite.verein if invite else '' }}" required class="w-full p-2 border rounded">
         </div>
         <div>
+          <label class="block font-medium mb-1">Tischnummer (optional)</label>
+          <input type="text" name="tischnummer" value="{{ invite.tischnummer if invite else '' }}" class="w-full p-2 border rounded" placeholder="z.B. 1, 2, 3">
+          <p class="text-sm text-gray-500 mt-1">
+              Wenn keine Tischnummer angegeben wird, wird automatisch die nächste freie Tischnummer vergeben.
+          </p>
+      </div>
+        <div>
             <label class="block font-medium mb-1">Token (optional)</label>
             <input type="text" name="token" value="{{ invite.token if invite else '' }}" class="w-full p-2 border rounded" placeholder="z.B. bestehender Token">
             <p class="text-sm text-gray-500 mt-1">

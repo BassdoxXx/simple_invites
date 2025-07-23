@@ -1,9 +1,7 @@
 from app import create_app, db
 from flask import render_template
-from flask_migrate import Migrate
 
 app = create_app()
-migrate = Migrate(app, db)
 
 with app.app_context():
     db.create_all()  # Erstellt alle Tabellen, falls sie nicht existieren
