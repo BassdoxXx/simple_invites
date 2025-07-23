@@ -1,0 +1,69 @@
+{% extends "layout_admin.html" %}
+{% block title %}Tisch zuweisen{% endblock %}
+
+{% block admin_content %}
+<h1 class="text-3xl font-bold mb-6">Tisch zuweisen für {{ invite.verein }}</h1>
+
+<div class="mb-8 bg-white p-6 rounded shadow">
+  <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    
+    <div class="space-y-4">
+      <label class="block">
+        <span class="text-lg">Aktuelle Tischnummer: 
+          <strong>{{ current_table or "Nicht zugewiesen (automatisch)" }}</strong>
+        </span>
+      </label>
+      
+      <div class="mb-4">
+        <label class="block mb-2 text-lg" for="tischnummer">Neue Tischnummer:</label>
+        <input
+          type="number"
+          id="tischnummer"
+          name="tischnummer"
+          min="1"
+          max="{{ max_tables }}"
+          value="{{ current_table }}"
+          class="p-3 border rounded w-full"
+          placeholder="Leer lassen für automatische Vergabe"
+        >
+        <p class="mt-2 text-gray-600 text-sm">
+          Hinweis: Bei Eingabe einer Tischnummer wird der Verein aus der automatischen Vergabe herausgenommen.
+          Bei großen Gruppen (mehr als {{ max_persons_per_table }} Personen) werden automatisch benachbarte Tische mitbelegt.
+        </p>
+      </div>
+      
+      <div>
+        <p class="text-gray-600 mb-2">Bereits belegte Tische:</p>
+        <div class="flex flex-wrap gap-2">
+          {% for tisch in blocked|sort %}
+            <span class="bg-gray-200 px-3 py-1 rounded">{{ tisch }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      
+      {% if response and response.persons > max_persons_per_table %}
+        <div class="p-4 bg-yellow-100 rounded-lg border border-yellow-300 text-yellow-800">
+          <p class="font-bold">Achtung: Große Gruppe</p>
+          <p>
+            Dieser Verein hat {{ response.persons }} Personen angemeldet.
+            Da dies mehr als ein Tisch ({{ max_persons_per_table }} Plätze) aufnehmen kann,
+            werden bei manueller Zuweisung automatisch benachbarte Tische mitgenutzt.
+          </p>
+        </div>
+      {% endif %}
+    </div>
+    
+    <div class="mt-6 flex justify-end gap-3">
+      <a 
+        href="{{ url_for('admin.index') }}"
+        class="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600"
+      >Abbrechen</a>
+      <button
+        type="submit"
+        class="bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700"
+      >Tisch zuweisen</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
