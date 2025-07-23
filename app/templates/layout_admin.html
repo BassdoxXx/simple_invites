@@ -22,8 +22,6 @@
              href="{{ url_for('admin.create_invite') }}">Neue Einladung</a>
           <a class="py-2 px-2 md:mx-2 rounded hover:bg-blue-700 {% if request.endpoint == 'admin.settings' %}bg-blue-700{% endif %}" 
              href="{{ url_for('admin.settings') }}">Einstellungen</a>
-          <a class="py-2 px-2 md:mx-2 rounded hover:bg-blue-700 {% if request.endpoint == 'auth.admin_change_password' %}bg-blue-700{% endif %}" 
-             href="{{ url_for('auth.admin_change_password') }}">Passwort ändern</a>
         </div>
         <div class="mt-2 md:mt-0">
           <a class="block py-2 px-4 rounded hover:bg-blue-700" href="{{ url_for('auth.logout') }}">Logout</a>

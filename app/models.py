@@ -8,7 +8,7 @@ db = SQLAlchemy()
 class Invite(db.Model):
     """
     Speichert Einladungen zu einer Veranstaltung.
-    Jeder Eintrag enthält einen Token und einen Link,
+    Jeder Eintrag enthält einen Token und QR-Code-Link,
     über den eine spezifische Feuerwehr antworten kann.
     """
     __tablename__ = "invites"
@@ -17,14 +17,9 @@ class Invite(db.Model):
     tischnummer = db.Column(db.String(200), nullable=True)
     token = db.Column(db.String(64), unique=True, nullable=False)
     link = db.Column(db.String(512), nullable=False)
+    qr_code_path = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     manuell_gesetzt = db.Column(db.Boolean, default=False)
-    
-    def __init__(self, **kwargs):
-        # Explicitly ignore qr_code_path
-        if 'qr_code_path' in kwargs:
-            del kwargs['qr_code_path']
-        super(Invite, self).__init__(**kwargs)
 
 class Response(db.Model):
     """
