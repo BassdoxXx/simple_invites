@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app.models import Setting, Invite, Response, TableAssignment, db
-from app.utils.tisch_utils import assign_all_tables
+from app.utils.table_utils import assign_all_tables
 from datetime import datetime, timezone
 
 public_bp = Blueprint("public", __name__)
@@ -10,7 +10,7 @@ def index():
     vereins_name_setting = Setting.query.filter_by(key="vereins_name").first()
     event_name_setting = Setting.query.filter_by(key="event_name").first()
     return render_template(
-        "token_input.html",
+        "public_token_input.html",
         vereins_name=vereins_name_setting.value if vereins_name_setting else "",
         event_name=event_name_setting.value if event_name_setting else ""
     )
@@ -82,7 +82,7 @@ def respond(token):
         persons_changed = old_persons != persons if old_persons else True
 
         if attending_changed or persons_changed:
-            assign_all_tables()  # Zentrale Tischvergabe
+            assign_all_tables()  # Zentrale Tischvergabe - berücksichtigt Aktivierungsstatus
 
         flash("Antwort gespeichert. Danke!", "success")
         return redirect(url_for("public.respond", token=token))
@@ -91,7 +91,7 @@ def respond(token):
     event_name_setting = Setting.query.filter_by(key="event_name").first()
     vereins_name_setting = Setting.query.filter_by(key="vereins_name").first()
     return render_template(
-        "respond.html",
+        "public_invite_respond.html",
         invite=invite,
         invite_header=invite_header_value,
         response=response,
@@ -102,8 +102,8 @@ def respond(token):
 
 @public_bp.route("/impressum")
 def legal_impressum():
-    return render_template("impressum.html")
+    return render_template("public_legal_impressum.html")
 
 @public_bp.route("/datenschutz")
 def legal_datenschutz():
-    return render_template("datenschutz.html")
+    return render_template("public_legal_privacy.html")
