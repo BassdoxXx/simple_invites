@@ -6,7 +6,7 @@
 <div class="flex items-center justify-center bg-gray-100 pt-6 pb-4 min-h-[70vh]">
   <div class="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-md border-4 border-blue-200">
     {% if vereins_name %}
-      <h2 class="text-3xl font-extrabold text-pink-600 text-center mb-2 drop-shadow">{{ vereins_name }}</h2>
+      <h2 class="text-3xl font-extrabold text-red-600 text-center mb-2 drop-shadow">{{ vereins_name }}</h2>
     {% endif %}
     {% if event_name %}
       <h3 class="text-xl font-semibold text-blue-700 text-center mb-6">{{ event_name }}</h3>
@@ -18,8 +18,8 @@
       Bitte gib deinen <span class="font-semibold text-blue-600">Einladungscode</span> ein, um deine persönliche Einladung zu öffnen.
     </p>
     <form method="POST" action="{{ url_for('public.find_token') }}" class="space-y-4">
-      <input type="text" name="token" placeholder="Einladungscode eingeben..." required class="w-full p-3 border-2 border-pink-300 rounded-xl text-center focus:outline-none focus:border-blue-500 transition">
-      <button type="submit" class="w-full bg-gradient-to-r from-pink-500 via-blue-500 to-purple-500 text-white py-3 px-4 rounded-xl font-bold shadow-lg hover:scale-105 transition">
+      <input type="text" name="token" placeholder="Einladungscode eingeben..." required class="w-full p-3 border-2 border-red-300 rounded-xl text-center focus:outline-none focus:border-blue-500 transition">
+      <button type="submit" class="w-full bg-blue-600 text-white py-3 px-4 rounded-xl font-bold shadow-lg hover:scale-105 transition">
         Einladung anzeigen 🚀
       </button>
     </form>
