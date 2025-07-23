@@ -15,6 +15,9 @@ def create_app(testing=False):
     db_path = os.path.join(data_dir, "simple_invites.db")
     secret_file = os.path.join(data_dir, "secret_key.txt")
 
+    # Ordner anlegen, falls nicht vorhanden
+    os.makedirs(data_dir, exist_ok=True)
+
     # SECRET_KEY laden oder generieren
     secret_key = os.environ.get("SECRET_KEY")
     if not secret_key:

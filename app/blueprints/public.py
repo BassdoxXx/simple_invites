@@ -6,7 +6,13 @@ public_bp = Blueprint("public", __name__)
 
 @public_bp.route("/")
 def index():
-    return render_template("token_input.html")
+    vereins_name_setting = Setting.query.filter_by(key="vereins_name").first()
+    event_name_setting = Setting.query.filter_by(key="event_name").first()
+    return render_template(
+        "token_input.html",
+        vereins_name=vereins_name_setting.value if vereins_name_setting else "",
+        event_name=event_name_setting.value if event_name_setting else ""
+    )
 
 @public_bp.route("/find", methods=["POST"])
 def find_token():
