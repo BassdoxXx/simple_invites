@@ -30,6 +30,16 @@
       <input type="date" id="event_date" name="event_date" class="w-full p-2 border rounded"
              value="{{ event_date }}">
     </div>
+    <div>
+      <label for="event_time" class="block font-semibold mb-1">Uhrzeit</label>
+      <input type="text" id="event_time" name="event_time" class="w-full p-2 border rounded"
+             value="{{ event_time }}" placeholder="z.B. 19:00 Uhr">
+    </div>
+    <div>
+      <label for="event_location" class="block font-semibold mb-1">Veranstaltungsort</label>
+      <input type="text" id="event_location" name="event_location" class="w-full p-2 border rounded"
+             value="{{ event_location }}" placeholder="z.B. Vereinsheim">
+    </div>
     <div class="mb-4">
       <label for="invite_header" class="block font-semibold mb-1">Einladungstext</label>
       <textarea id="invite_header" name="invite_header" rows="5" class="w-full p-2 border rounded">{{ invite_header }}</textarea>

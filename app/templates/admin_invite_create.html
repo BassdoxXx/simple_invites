@@ -48,6 +48,60 @@
           {% if invite %}Kann nicht nachträglich geändert werden.{% endif %}
         </p>
       </div>
+      
+      <div class="mt-6">
+        <h3 class="text-lg font-bold mb-3 border-b pb-2">Kontaktdaten</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label for="ansprechpartner" class="block font-semibold mb-1">Ansprechpartner</label>
+            <input
+              type="text"
+              id="ansprechpartner"
+              name="ansprechpartner"
+              value="{{ invite.ansprechpartner if invite else '' }}"
+              class="w-full p-3 border rounded focus:outline-none focus:border-blue-500"
+              placeholder="Vor- und Nachname"
+            />
+          </div>
+          
+          <div>
+            <label for="strasse" class="block font-semibold mb-1">Straße und Hausnummer</label>
+            <input
+              type="text"
+              id="strasse"
+              name="strasse"
+              value="{{ invite.strasse if invite else '' }}"
+              class="w-full p-3 border rounded focus:outline-none focus:border-blue-500"
+              placeholder="z.B. Musterstraße 123"
+            />
+          </div>
+          
+          <div>
+            <label for="plz" class="block font-semibold mb-1">PLZ</label>
+            <input
+              type="text"
+              id="plz"
+              name="plz"
+              value="{{ invite.plz if invite else '' }}"
+              class="w-full p-3 border rounded focus:outline-none focus:border-blue-500"
+              placeholder="z.B. 12345"
+            />
+          </div>
+          
+          <div>
+            <label for="ort" class="block font-semibold mb-1">Ort</label>
+            <input
+              type="text"
+              id="ort"
+              name="ort"
+              value="{{ invite.ort if invite else '' }}"
+              class="w-full p-3 border rounded focus:outline-none focus:border-blue-500"
+              placeholder="z.B. Musterstadt"
+            />
+          </div>
+        </div>
+      </div>
     </div>
     
     <div class="mt-8 flex justify-end gap-3">

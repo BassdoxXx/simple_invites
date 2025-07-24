@@ -22,8 +22,9 @@
   </div>
 {% endif %}
 <!-- Dashboard-Statistiken -->
+
 <div class="mt-8 mb-8">
-  <h2 class="text-2xl font-bold mb-4">Dashboard-Statistiken</h2>
+  <h1 class="text-3xl font-bold mb-4">Dashboard-Statistiken</h1>
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
     <div class="bg-blue-600 text-white p-4 rounded-lg shadow">
       <h5 class="text-lg font-semibold">Einladungen</h5>
@@ -47,10 +48,6 @@
 <!-- Gästeliste mit "Neue Einladung" Button -->
 <div class="flex justify-between items-center mb-4">
   <h1 class="text-3xl font-bold">Gästeliste</h1>
-  <a href="{{ url_for('admin.create_invite') }}" 
-     class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded flex items-center gap-2">
-    <span>➕</span> Neue Einladung
-  </a>
 </div>
 
 <!-- Rest des Codes bleibt unverändert... -->
@@ -85,12 +82,22 @@
 </div>
 
 <div class="mb-4 flex gap-2">
-  <a
-    href="{{ url_for('admin.export_all_csv') }}"
-    class="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
+  <button
+    id="csvExportBtn"
+    type="button"
+    class="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+    disabled
   >
     CSV Export
-  </a>
+  </button>
+  
+  <button type="button" 
+    id="pdfExportBtn"
+    class="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+    disabled
+  >
+    Einladung als PDF
+  </button>
 </div>
 <div class="overflow-x-auto w-full">
   <table
@@ -99,6 +106,9 @@
   >
     <thead class="bg-gray-200">
       <tr>
+        <th class="w-10 p-3 text-center">
+          <input type="checkbox" id="selectAll" class="form-checkbox h-4 w-4 text-blue-600">
+        </th>
         <th class="w-1/6 p-3 sortable" data-sort="verein">
           Gast
         </th>
@@ -119,7 +129,10 @@
     </thead>
     <tbody>
       {% for invite in invites %}
-      <tr class="border-t">
+      <tr class="border-t searchable-row">
+        <td class="p-3 text-center">
+          <input type="checkbox" name="selected_invites" value="{{ invite.token }}" class="invite-checkbox form-checkbox h-4 w-4 text-blue-600">
+        </td>
         <td class="p-3 font-medium whitespace-nowrap max-w-xs sm:max-w-none">
           {{ invite.verein }}
         </td>
@@ -256,6 +269,14 @@
 {% endif %}
 
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+
+<script>
+  // Global variables for the dashboard.js script
+  const PDF_EXPORT_URL = '{{ url_for("pdf.generate_selected_pdfs") }}';
+  const CSV_EXPORT_URL = '{{ url_for("admin.export_all_csv") }}';
+  const CSRF_TOKEN = '{{ csrf_token() }}';
+</script>
 
 <style>
   .sortable {

@@ -7,6 +7,7 @@ from app.utils.enforce_password_change import enforce_password_change
 from app.blueprints.auth import auth_bp
 from app.blueprints.admin import admin_bp
 from app.blueprints.public import public_bp
+from app.blueprints.pdf import pdf_bp
 import os
 import secrets
 
@@ -53,6 +54,7 @@ def create_app(testing=False):
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(admin_bp, url_prefix="/admin")
     app.register_blueprint(public_bp)
+    app.register_blueprint(pdf_bp, url_prefix="/pdf")
 
     # CSRF-Schutz aktivieren
     csrf = CSRFProtect(app)

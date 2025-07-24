@@ -107,6 +107,8 @@ def process_csv_import(content, dialect, has_header, base_url):
     Returns:
         int: The number of successfully imported invitations
     """
+    from app.utils.qr_utils import generate_qr
+    
     csv_data = csv.reader(io.StringIO(content), dialect)
     max_imports = 500
     imported_count = 0
@@ -120,20 +122,42 @@ def process_csv_import(content, dialect, has_header, base_url):
     if has_header:
         first_row = next(csv_data, None)
     
-    # Bestimme den Index der Vereinsspalte, falls ein Header existiert
-    verein_index = 0
+    # Spaltenindizes für die verschiedenen Felder bestimmen
+    column_indices = {
+        'verein': 0,
+        'ansprechpartner': None,
+        'strasse': None,
+        'plz': None,
+        'ort': None,
+        'telefon': None,
+        'email': None
+    }
+    
+    # Bestimme die Indizes der Spalten, falls ein Header existiert
     if has_header and first_row:
         for i, header in enumerate(first_row):
-            if header.lower().strip() == 'verein':
-                verein_index = i
-                break
+            header_lower = header.lower().strip()
+            if header_lower == 'verein':
+                column_indices['verein'] = i
+            elif header_lower in ['ansprechpartner', 'kontakt', 'person']:
+                column_indices['ansprechpartner'] = i
+            elif header_lower in ['strasse', 'straße', 'adresse']:
+                column_indices['strasse'] = i
+            elif header_lower in ['plz', 'postleitzahl']:
+                column_indices['plz'] = i
+            elif header_lower == 'ort':
+                column_indices['ort'] = i
+            elif header_lower in ['telefon', 'tel', 'telefonnummer']:
+                column_indices['telefon'] = i
+            elif header_lower in ['email', 'e-mail', 'mail']:
+                column_indices['email'] = i
     
     for row in csv_data:
-        if not row or len(row) <= verein_index:  # Überspringe leere oder unvollständige Zeilen
+        if not row or len(row) <= column_indices['verein']:  # Überspringe leere oder unvollständige Zeilen
             continue
         
         # Nehme den Wert aus der Vereinsspalte
-        verein = row[verein_index].strip()
+        verein = row[column_indices['verein']].strip()
         
         if not verein:  # Überspringe leere Namen
             continue
@@ -156,12 +180,32 @@ def process_csv_import(content, dialect, has_header, base_url):
         
         # Erstelle die Einladung
         invite_url = f"{base_url}/respond/{token}"
+        
+        # Kontaktdaten extrahieren, falls vorhanden
+        ansprechpartner = get_value_from_row(row, column_indices, 'ansprechpartner')
+        strasse = get_value_from_row(row, column_indices, 'strasse')
+        plz = get_value_from_row(row, column_indices, 'plz')
+        ort = get_value_from_row(row, column_indices, 'ort')
+        telefon = get_value_from_row(row, column_indices, 'telefon')
+        email = get_value_from_row(row, column_indices, 'email')
+        
         new_invite = Invite(
             verein=verein,
             token=token,
-            link=invite_url
+            link=invite_url,
+            ansprechpartner=ansprechpartner,
+            strasse=strasse,
+            plz=plz,
+            ort=ort,
+            telefon=telefon,
+            email=email
         )
         db.session.add(new_invite)
+        db.session.flush()  # Um die ID zu erhalten
+        
+        # QR-Code generieren und Pfad in der Datenbank speichern
+        generate_qr(invite_url, verein, token, new_invite.id)
+        
         imported_count += 1
     
     db.session.commit()
@@ -171,6 +215,17 @@ def process_csv_import(content, dialect, has_header, base_url):
         flash(f"{duplicate_count} Einträge wurden übersprungen, da sie bereits existieren.", "warning")
         
     return imported_count
+
+
+def get_value_from_row(row, indices, field):
+    """
+    Hilfsfunktion, um einen Wert aus einer Zeile zu extrahieren,
+    wenn der Index existiert und gültig ist.
+    """
+    index = indices.get(field)
+    if index is not None and index < len(row):
+        return row[index].strip()
+    return None
 
 
 def generate_unique_token():
@@ -203,11 +258,13 @@ def generate_all_invites_csv(invites, responses, get_full_link_func):
         Response-Objekt mit CSV-Datei
     """
     output = io.StringIO()
+    # BOM für UTF-8 hinzufügen, damit Excel die Umlaute korrekt erkennt
+    output.write('\ufeff')
     writer = csv.writer(output, delimiter=';')
     
     writer.writerow([
-        "Verein", "Tischnummer", "Link", "Antwort", 
-        "Personen", "Zuletzt aktualisiert"
+        "Verein", "Ansprechpartner", "Straße", "PLZ", "Ort", "Telefon", "Email",
+        "Tischnummer", "Link", "QR-Code", "Antwort", "Personen", "Zuletzt aktualisiert"
     ])
     
     # Sortiere Einladungen alphabetisch nach Vereinsname
@@ -219,8 +276,15 @@ def generate_all_invites_csv(invites, responses, get_full_link_func):
         
         writer.writerow([
             invite.verein,
-            invite.tischnummer,
+            invite.ansprechpartner or "",
+            invite.strasse or "",
+            invite.plz or "",
+            invite.ort or "",
+            invite.telefon or "",
+            invite.email or "",
+            invite.tischnummer or "",
             full_link,
+            invite.qr_code_path or "",
             res.attending if res else "",
             res.persons if res else "",
             res.timestamp.strftime('%d.%m.%Y %H:%M') if res and res.timestamp else ""
@@ -229,7 +293,7 @@ def generate_all_invites_csv(invites, responses, get_full_link_func):
     output.seek(0)
     return Response(
         output.getvalue(),
-        mimetype="text/csv",
+        mimetype="text/csv; charset=utf-8",
         headers={"Content-Disposition": "attachment;filename=einladungen.csv"}
     )
 
@@ -247,26 +311,37 @@ def generate_single_invite_csv(invite, response, get_full_link_func):
         Response-Objekt mit CSV-Datei
     """
     output = io.StringIO()
+    # BOM für UTF-8 hinzufügen, damit Excel die Umlaute korrekt erkennt
+    output.write('\ufeff')
     writer = csv.writer(output, delimiter=';')
     
     writer.writerow([
-        "Verein", "Tischnummer", "Link", "Antwort", 
-        "Personen", "Zuletzt aktualisiert"
+        "Verein", "Ansprechpartner", "Straße", "PLZ", "Ort", "Telefon", "Email",
+        "Tischnummer", "Link", "QR-Code", "Antwort", "Personen", "Zuletzt aktualisiert"
     ])
     
     full_link = get_full_link_func(invite.token)
     writer.writerow([
         invite.verein,
-        invite.tischnummer,
+        invite.ansprechpartner or "",
+        invite.strasse or "",
+        invite.plz or "",
+        invite.ort or "",
+        invite.telefon or "",
+        invite.email or "",
+        invite.tischnummer or "",
         full_link,
+        invite.qr_code_path or "",
         response.attending if response else "",
         response.persons if response else "",
         response.timestamp.strftime('%d.%m.%Y %H:%M') if response and response.timestamp else ""
     ])
     
     output.seek(0)
+    # Safe filename without special characters
+    safe_name = ''.join(c for c in invite.verein if c.isalnum() or c in '_ -')
     return Response(
         output.getvalue(),
-        mimetype="text/csv",
-        headers={"Content-Disposition": f"attachment;filename=einladung_{invite.verein}_{invite.token}.csv"}
+        mimetype="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f"attachment;filename=einladung_{safe_name}_{invite.token}.csv"}
     )

@@ -3,6 +3,7 @@ from flask_login import login_required
 from app.models import Invite, Response, Setting, TableAssignment, db
 from app.utils.table_utils import assign_all_tables, get_blocked_tischnummern, get_next_free_tischnummer, build_verein_tische_map
 from app.utils.settings_utils import get_setting, get_multiple_settings, get_max_tables, get_base_url
+from app.utils.qr_utils import generate_qr
 import os
 from datetime import datetime, date
 from sqlalchemy import func
@@ -130,6 +131,12 @@ def create_invite():
     if request.method == "POST":
         verein = request.form.get("verein", "").strip()
         
+        # Get contact information
+        ansprechpartner = request.form.get("ansprechpartner", "").strip()
+        strasse = request.form.get("strasse", "").strip()
+        plz = request.form.get("plz", "").strip()
+        ort = request.form.get("ort", "").strip()
+        
         # Entweder Token vom Formular nehmen oder einen 8-stelligen generieren
         form_token = request.form.get("token", "").strip()
         if form_token and len(form_token) == 8:
@@ -138,6 +145,9 @@ def create_invite():
             # Generiere einen einzigartigen Token
             from app.utils.csv_utils import generate_unique_token
             token = generate_unique_token()
+        
+        # Base URL for response and QR code
+        base_url = get_base_url()
         
         if invite:
             # Bestehende Einladung aktualisieren
@@ -153,14 +163,16 @@ def create_invite():
                         vereins_name=get_setting("vereins_name", "")
                     )
             
+            # Update invitation details
             invite.verein = verein
-            if form_token:  # Nur aktualisieren, wenn explizit ein neuer Token eingegeben wurde
-                invite.token = token
-                
-                # URL aktualisieren, wenn sich der Token ändert
-                base_url = get_base_url()
-                invite.link = f"{base_url}/respond/{token}"
-                
+            invite.ansprechpartner = ansprechpartner
+            invite.strasse = strasse
+            invite.plz = plz
+            invite.ort = ort
+            
+            # The token cannot be changed after creation
+            
+            # Save changes
             db.session.commit()
             
             flash(f"Einladung für {verein} wurde aktualisiert.", "success")
@@ -175,18 +187,26 @@ def create_invite():
                     vereins_name=get_setting("vereins_name", "")
                 )
                 
-            # Neue Einladung erstellen
-            base_url = get_base_url()
+            # Create response URL
             invite_url = f"{base_url}/respond/{token}"
             
             # Erstelle die neue Einladung mit allen erforderlichen Feldern
             new_invite = Invite(
                 verein=verein, 
                 token=token,
-                link=invite_url  # Hier den Link hinzufügen
+                link=invite_url,
+                ansprechpartner=ansprechpartner,
+                strasse=strasse,
+                plz=plz,
+                ort=ort
             )
             db.session.add(new_invite)
             db.session.commit()
+            
+            # Generate QR code automatically after commit (to get the ID)
+            if new_invite.id:
+                from app.utils.qr_utils import generate_qr
+                qr_path = generate_qr(invite_url, verein, token, new_invite.id)
             
             flash(f"Neue Einladung für {verein} wurde erstellt.", "success")
         
@@ -243,6 +263,8 @@ def settings():
         "event_name": "",
         "vereins_name": "",
         "event_date": "",  # Format: YYYY-MM-DD für das Event-Datum
+        "event_time": "",  # Format: HH:MM Uhr
+        "event_location": "",  # Veranstaltungsort
         "max_tables": "90",
         "max_persons_per_table": "10",
         "enable_tables": "false"
@@ -285,29 +307,41 @@ def settings():
         **current_settings,
     )
 
-@admin_bp.route("/export/csv")
+@admin_bp.route("/export/csv", methods=["GET", "POST"])
 @login_required
 def export_all_csv():
     """Export all invitations and responses to a CSV file."""
-    from app.utils.csv_utils import generate_all_invites_csv
-    
-    invites = Invite.query.all()
-    responses = {r.token: r for r in Response.query.all()}
+    from app.utils.csv_utils import generate_all_invites_csv, generate_single_invite_csv
     
     # Hilfsfunktion für die URL-Generierung
     def get_full_link(token):
         return url_for("public.respond", token=token, _external=True)
     
+    # Prüfen ob spezifische Tokens ausgewählt wurden
+    if request.method == "POST" and request.form.getlist('selected_invites'):
+        selected_tokens = request.form.getlist('selected_invites')
+        
+        # Wenn nur ein Token ausgewählt wurde, generiere einen einzelnen CSV-Export
+        if len(selected_tokens) == 1:
+            invite = Invite.query.filter_by(token=selected_tokens[0]).first_or_404()
+            res = Response.query.filter_by(token=selected_tokens[0]).first()
+            return generate_single_invite_csv(invite, res, get_full_link)
+        
+        # Mehrere ausgewählte Einladungen exportieren
+        invites = Invite.query.filter(Invite.token.in_(selected_tokens)).order_by(Invite.verein).all()
+        responses = {r.token: r for r in Response.query.filter(Response.token.in_(selected_tokens)).all()}
+        
+        return generate_all_invites_csv(invites, responses, get_full_link)
+    
+    # Standard: Alle exportieren
+    invites = Invite.query.all()
+    responses = {r.token: r for r in Response.query.all()}
     return generate_all_invites_csv(invites, responses, get_full_link)
 
 @admin_bp.route("/export/csv/<token>")
 @login_required
 def export_single_csv(token):
-    """Export a single invitation with its response to CSV.
-    
-    Why: Allows exporting details about specific invitations for focused
-    record keeping or communication purposes.
-    """
+    """Export a single invitation with its response to CSV."""
     from app.utils.csv_utils import generate_single_invite_csv
     
     invite = Invite.query.filter_by(token=token).first_or_404()
@@ -323,9 +357,38 @@ def export_single_csv(token):
 @admin_bp.route("/edit/<token>", methods=["GET", "POST"])
 @login_required
 def edit_invite(token):
-    """Edit an existing invitation by redirecting to create_invite."""
+    """Edit an existing invitation."""
     invite = Invite.query.filter_by(token=token).first_or_404()
-    return redirect(url_for("admin.create_invite", invite_id=invite.id))
+    
+    if request.method == "POST":
+        # Get form data
+        verein = request.form.get("verein", "").strip()
+        ansprechpartner = request.form.get("ansprechpartner", "").strip()
+        strasse = request.form.get("strasse", "").strip()
+        plz = request.form.get("plz", "").strip()
+        ort = request.form.get("ort", "").strip()
+        
+        # Check if another invite with this name exists
+        if verein.lower() != invite.verein.lower():
+            existing = Invite.query.filter(func.lower(Invite.verein) == verein.lower(),
+                                          Invite.id != invite.id).first()
+            if existing:
+                flash(f"Ein Eintrag für '{verein}' existiert bereits. Bitte wählen Sie einen anderen Namen.", "danger")
+                return render_template("admin_invite_edit.html", invite=invite)
+        
+        # Update the invite
+        invite.verein = verein
+        invite.ansprechpartner = ansprechpartner
+        invite.strasse = strasse
+        invite.plz = plz
+        invite.ort = ort
+        
+        db.session.commit()
+        
+        flash(f"Einladung für {verein} wurde aktualisiert.", "success")
+        return redirect(url_for("admin.index"))
+    
+    return render_template("admin_invite_edit.html", invite=invite)
 
 @admin_bp.route("/import-csv", methods=["POST"])
 @login_required

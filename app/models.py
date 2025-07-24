@@ -20,10 +20,17 @@ class Invite(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     manuell_gesetzt = db.Column(db.Boolean, default=False)
     
+    # Neue Felder für Kontaktdaten
+    ansprechpartner = db.Column(db.String(200), nullable=True)
+    strasse = db.Column(db.String(200), nullable=True)
+    plz = db.Column(db.String(10), nullable=True)
+    ort = db.Column(db.String(200), nullable=True)
+    telefon = db.Column(db.String(50), nullable=True)
+    email = db.Column(db.String(200), nullable=True)
+    qr_code_path = db.Column(db.String(512), nullable=True)
+    
     def __init__(self, **kwargs):
-        # Explicitly ignore qr_code_path
-        if 'qr_code_path' in kwargs:
-            del kwargs['qr_code_path']
+        # QR code path wird bei Bedarf später gesetzt
         super(Invite, self).__init__(**kwargs)
 
 class Response(db.Model):
