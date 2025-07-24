@@ -2,6 +2,7 @@
 Hilfsfunktionen für die Verwaltung von Anwendungseinstellungen.
 """
 
+import os
 from functools import lru_cache
 from app.models import Setting
 
@@ -47,3 +48,51 @@ def get_max_tables():
     """
     max_tables_setting = get_setting("max_tables", "90")
     return int(max_tables_setting) if max_tables_setting.isdigit() else 90
+
+
+def get_base_url():
+    """Get base URL from APP_HOSTNAME environment variable or database setting.
+    
+    Why: We need a consistent way to generate absolute URLs throughout
+    the application, prioritizing the environment variable to support
+    different deployment environments.
+    
+    Returns:
+        str: The base URL to use for all absolute links.
+    """
+    # 1. Try to get from environment variable first
+    app_hostname = os.environ.get("APP_HOSTNAME")
+    if app_hostname:
+        return app_hostname
+        
+    # 2. Fall back to database setting
+    base_url = get_setting("base_url", "http://localhost:5000")
+    return base_url
+
+
+def check_hostname_config():
+    """
+    Überprüft die Hostnamen-Konfiguration und gibt Warnungen aus,
+    wenn sie nicht korrekt ist.
+    
+    Diese Funktion wird beim Startup aufgerufen, um Konfigurationsprobleme
+    frühzeitig zu erkennen.
+    """
+    base_url = get_base_url()
+    app_hostname = os.environ.get("APP_HOSTNAME")
+    
+    print("\n" + "="*60)
+    print("🌐 HOSTNAME CONFIGURATION")
+    print("="*60)
+    
+    if app_hostname:
+        print(f"✅ APP_HOSTNAME environment variable is set to: {app_hostname}")
+        print(f"✅ All links will be generated using: {base_url}")
+    else:
+        print("⚠️  WARNING: APP_HOSTNAME environment variable is NOT set!")
+        print(f"⚠️  Using fallback from database: {base_url}")
+        print("⚠️  This may cause incorrect URLs in production!")
+        print("\n📝 Set APP_HOSTNAME in your environment or docker-compose.yml:")
+        print("   Example: APP_HOSTNAME=https://invites.ffw-windischletten.de")
+    
+    print("="*60)

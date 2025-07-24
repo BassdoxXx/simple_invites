@@ -8,6 +8,7 @@ import random
 import string
 from flask import flash, redirect, url_for, request, Response
 from app.models import Invite, Response as InviteResponse, db
+from app.utils.settings_utils import get_base_url
 from datetime import datetime
 
 def validate_csv_file(csv_file):

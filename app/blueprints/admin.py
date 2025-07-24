@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required
 from app.models import Invite, Response, Setting, TableAssignment, db
 from app.utils.table_utils import assign_all_tables, get_blocked_tischnummern, get_next_free_tischnummer, build_verein_tische_map
-from app.utils.settings_utils import get_setting, get_multiple_settings, get_max_tables
+from app.utils.settings_utils import get_setting, get_multiple_settings, get_max_tables, get_base_url
 import os
 from datetime import datetime, date
 from sqlalchemy import func
@@ -158,7 +158,7 @@ def create_invite():
                 invite.token = token
                 
                 # URL aktualisieren, wenn sich der Token ändert
-                base_url = get_setting("base_url", "http://localhost:5000")
+                base_url = get_base_url()
                 invite.link = f"{base_url}/respond/{token}"
                 
             db.session.commit()
@@ -176,7 +176,7 @@ def create_invite():
                 )
                 
             # Neue Einladung erstellen
-            base_url = get_setting("base_url", "http://localhost:5000")
+            base_url = get_base_url()
             invite_url = f"{base_url}/respond/{token}"
             
             # Erstelle die neue Einladung mit allen erforderlichen Feldern
@@ -352,7 +352,7 @@ def import_csv():
         return error_redirect
     
     # Verarbeite den Import
-    base_url = get_setting("base_url", "http://localhost:5000")
+    base_url = get_base_url()
     imported_count = process_csv_import(content, dialect, has_header, base_url)
     
     if imported_count > 0:
