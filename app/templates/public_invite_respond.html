@@ -18,8 +18,36 @@
     {% else %}
       <h3 class="text-xl font-bold text-gray-800 text-center mb-4">Hallo und willkommen!</h3>
     {% endif %}
-    <div class="flex justify-center mb-4">
-      <img src="{{ url_for('static', filename='img/invite.png') }}" alt="Einladung" class="w-40 h-auto">
+    <div class="flex justify-center mb-6">
+      <div class="w-56 h-20 relative">
+        <!-- Schönes "Einladung" SVG -->
+        <svg viewBox="0 0 240 80" class="w-full h-full">
+          <defs>
+            <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#e53e3e" />
+              <stop offset="100%" stop-color="#3182ce" />
+            </linearGradient>
+            <filter id="shadow" x="-0.02" y="0" width="1.04" height="1.1">
+              <feOffset result="offOut" in="SourceAlpha" dx="1" dy="2" />
+              <feGaussianBlur result="blurOut" in="offOut" stdDeviation="2" />
+              <feBlend in="SourceGraphic" in2="blurOut" mode="normal" />
+            </filter>
+          </defs>
+          <text x="50%" y="55%" text-anchor="middle" font-family="cursive, Arial, sans-serif" font-size="32" font-weight="bold" fill="url(#textGradient)" filter="url(#shadow)">
+            Einladung
+          </text>
+          <!-- Dekorative Linie links -->
+          <path d="M20,55 Q50,30 70,55" stroke="#e53e3e" stroke-width="2" fill="none" />
+          <!-- Dekorative Linie rechts -->
+          <path d="M170,55 Q190,30 220,55" stroke="#3182ce" stroke-width="2" fill="none" />
+        </svg>
+        <!-- Kleines Icon oben -->
+        <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-red-500 to-blue-500 rounded-full p-1 shadow-md">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76" />
+          </svg>
+        </div>
+      </div>
     </div>
     <form method="POST" class="space-y-4">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -28,62 +56,99 @@
         {% if invite_header %}
           <p class="text-gray-700">{{ invite_header }}</p>
         {% else %}
-          <p class="text-gray-700">Wir würden uns freuen, dich bei unserer Veranstaltung begrüßen zu dürfen!</p>
+          <p class="text-gray-700">Wir würden uns freuen, dich/euch bei unserer Veranstaltung begrüßen zu dürfen!</p>
         {% endif %}
       </div>
       
-      <div class="mt-6">
-        <p class="text-lg font-bold mb-2">Kannst du dabei sein?</p>
-        <div class="flex flex-col space-y-2">
-          <label class="flex items-center">
+      <div class="mt-5">
+        <p class="text-base font-bold mb-2 text-center">Dabei?</p>
+        <div class="grid grid-cols-2 gap-2">
+          <label class="cursor-pointer">
             <input 
               type="radio" 
               name="attending" 
               id="attending_yes" 
               value="yes" 
               {% if response and response.attending == 'yes' %}checked{% endif %} 
-              class="mr-2">
-            <span class="text-lg text-green-700 font-semibold">Ja, ich bin dabei!</span>
+              class="hidden peer">
+            <div class="flex items-center justify-center p-2 rounded-md border-2 border-green-200 
+                        bg-gradient-to-b from-green-50 to-green-100 
+                        peer-checked:border-green-500 peer-checked:from-green-100 peer-checked:to-green-200
+                        hover:shadow-sm transition-all duration-200">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-sm font-bold text-green-700">Ja</span>
+            </div>
           </label>
-          <label class="flex items-center">
+          
+          <label class="cursor-pointer">
             <input 
               type="radio" 
               name="attending" 
               id="attending_no" 
               value="no" 
               {% if response and response.attending == 'no' %}checked{% endif %}
-              class="mr-2">
-            <span class="text-lg text-red-700 font-semibold">Nein, leider nicht</span>
+              class="hidden peer">
+            <div class="flex items-center justify-center p-2 rounded-md border-2 border-red-200 
+                        bg-gradient-to-b from-red-50 to-red-100
+                        peer-checked:border-red-500 peer-checked:from-red-100 peer-checked:to-red-200
+                        hover:shadow-sm transition-all duration-200">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              <span class="text-sm font-bold text-red-700">Nein</span>
+            </div>
           </label>
         </div>
       </div>
       
-      <div id="extra-fields" {% if not response or response.attending != 'yes' %}style="display: none;"{% endif %} class="space-y-4 bg-blue-50 p-4 rounded border border-blue-100 mt-4">
+      <div id="extra-fields" {% if not response or response.attending != 'yes' %}style="display: none;"{% endif %} class="space-y-4 bg-blue-50 p-6 rounded-lg border border-blue-200 mt-6 shadow-inner">
+        <div class="text-center mb-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        </div>
         <div>
-          <label for="persons" class="block font-bold mb-1">Wie viele Personen kommen?</label>
-          <input 
-            type="number" 
-            id="persons" 
-            name="persons" 
-            min="1" 
-            max="100"
-            value="{{ response.persons if response and response.persons else '1' }}"
-            class="w-full p-2 border rounded"
-            {% if response and response.attending != 'yes' %}disabled{% endif %}>
+          <label for="persons" class="block font-bold text-center text-blue-800 mb-3">Wie viele Personen kommen?</label>
+          <div class="flex items-center justify-center">
+            <button type="button" id="decrease" class="bg-blue-200 hover:bg-blue-300 text-blue-800 font-bold w-10 h-10 rounded-l-lg">
+              -
+            </button>
+            <input 
+              type="number" 
+              id="persons" 
+              name="persons" 
+              min="1" 
+              max="100"
+              value="{{ response.persons if response and response.persons else '1' }}"
+              class="w-16 h-10 text-center border-y border-blue-200 text-lg font-bold"
+              {% if response and response.attending != 'yes' %}disabled{% endif %}>
+            <button type="button" id="increase" class="bg-blue-200 hover:bg-blue-300 text-blue-800 font-bold w-10 h-10 rounded-r-lg">
+              +
+            </button>
+          </div>
         </div>
       </div>
 
       <div class="mt-6">
-        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+          </svg>
           Antwort speichern
         </button>
       </div>
     </form>
 
-    <br />
-    <p class="text-sm text-center">
-      <a href="{{ url_for('public.index') }}" class="text-blue-600 hover:underline">Zur Startseite</a>
-    </p>
+    <div class="mt-8 mb-4">
+      <a href="https://www.ffw-windischletten.de" class="flex items-center justify-center text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200 group">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 text-gray-500 group-hover:text-blue-600 transition-colors duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+        Zur Startseite
+      </a>
+    </div>
   </div>
 </div>
 <script>
@@ -92,16 +157,40 @@
     const no = document.getElementById("attending_no");
     const extra = document.getElementById("extra-fields");
     const personsField = document.getElementById("persons");
+    const increaseBtn = document.getElementById("increase");
+    const decreaseBtn = document.getElementById("decrease");
 
     function toggleExtraFields() {
       if (yes.checked) {
         extra.style.display = "block";
         personsField.disabled = false;
+        
+        // Animation hinzufügen
+        extra.classList.add("animate-fade-in");
+        setTimeout(() => {
+          extra.classList.remove("animate-fade-in");
+        }, 500);
       } else {
         extra.style.display = "none";
         personsField.disabled = true;
       }
     }
+
+    // Personenzahl erhöhen
+    increaseBtn.addEventListener("click", function() {
+      let value = parseInt(personsField.value);
+      if (value < 100) {
+        personsField.value = value + 1;
+      }
+    });
+
+    // Personenzahl verringern
+    decreaseBtn.addEventListener("click", function() {
+      let value = parseInt(personsField.value);
+      if (value > 1) {
+        personsField.value = value - 1;
+      }
+    });
 
     // Initialzustand setzen
     toggleExtraFields();
@@ -111,4 +200,23 @@
     no.addEventListener("change", toggleExtraFields);
   });
 </script>
+<style>
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+  /* Entferne Browser-Styling für Number Inputs */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+</style>
 {% endblock %}
