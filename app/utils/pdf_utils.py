@@ -89,39 +89,91 @@ def cleanup_old_pdf_files(max_age_minutes=15):
             print(f"Error during PDF cleanup: {e}")
 
 class InvitationPDF(FPDF):
-    """Custom PDF class for invitation generation"""
+    """Custom PDF class for invitation generation strictly according to DIN 5008"""
     
-    def __init__(self, orientation='P', unit='mm', format='A4'):
+    def __init__(self, orientation='P', unit='mm', format='A4', settings=None):
         super().__init__(orientation, unit, format)
-        # DIN-A4 standard margins: 25mm (2.5cm) on all sides
-        self.set_margins(25, 25, 25)
-        self.set_auto_page_break(auto=True, margin=25)
-        # Using standard fonts instead of custom fonts
-        self.set_font('Arial', '', 10)  # Default font
+        # Store settings for later use in footer
+        self.settings = settings
+        # DIN 5008 standard margins: 2.5cm left, at least 1cm right
+        self.set_margins(25, 20, 10)  # left, top, right margins
+        self.set_auto_page_break(auto=True, margin=20)  # bottom margin
+        # DIN 5008 recommends Arial 11pt or Times New Roman 12pt
+        self.set_font('Arial', '', 11)  # Default font
+        
+    def add_folding_marks(self):
+        """Adds the DIN 5008 standard folding marks to the page"""
+        # Save current line width setting
+        line_width = self.line_width
+        
+        # Set thin light gray line for folding marks
+        self.set_line_width(0.1)
+        self.set_draw_color(200, 200, 200)
+        
+        # First fold mark at 105mm from top (for DIN lang envelope)
+        self.line(5, 105, 8, 105)
+        
+        # Second fold mark at 210mm from top (for folding in thirds)
+        self.line(5, 210, 8, 210)
+        
+        # Restore original settings
+        self.set_line_width(line_width)
+        # Reset to default black color
+        self.set_draw_color(0)
 
     def header(self):
-        # Add logo to the top right corner
+        # Briefkopf - gemäß DIN 5008 maximal 7 Zeilen für Name, Anschrift, Telefon, E-Mail
         try:
             if os.path.exists(LOGO_PATH) and os.path.isfile(LOGO_PATH) and os.path.getsize(LOGO_PATH) > 0:
                 # Get the width of the page
                 page_width = self.w
-                # Logo dimensions - adjust as needed
-                logo_width = 40
-                # Position logo in top right corner (respecting the margin)
-                self.image(LOGO_PATH, x=page_width-65, y=10, w=logo_width)
+                # Logo dimensions - moderate size to fit with other header elements
+                logo_width = 55
+                # Position logo in top right area
+                self.image(LOGO_PATH, x=page_width-70, y=0, w=logo_width)
         except Exception as e:
             # Log the error but continue without the logo
             print(f"Could not add logo: {e}")
-        
-        # Reset position for content
-        self.ln(5)
+            
+        # Add folding marks according to DIN 5008
+        self.add_folding_marks()
 
     def footer(self):
-        # Add website URL in the footer
-        self.set_y(-20)  # 25mm from bottom plus some space
+        """Footer with dynamic contact information and legally required details according to DIN 5008"""
+        # First try to use settings from the instance if available
+        if hasattr(self, 'settings') and self.settings:
+            settings = self.settings
+        else:
+            # Try to get settings from Flask app config as fallback
+            try:
+                from flask import current_app
+                settings = current_app.config.get('CURRENT_SETTINGS', {})
+            except:
+                settings = {}
+        
+        # Get values from settings with fallbacks
+        vereins_name = settings.get('vereins_name', "Freiwillige Feuerwehr Windischletten e.V.")
+        contact_email = settings.get('contact_email', "info@ffw-windischletten.de")
+        website = settings.get('website', "www.ffw-windischletten.de")
+        
+        # Brieffuß - gemäß DIN 5008 mit gesetzlich vorgeschriebenen Informationen
+        self.set_y(-25)  # 25mm from bottom
         self.set_font('Arial', '', 9)
         self.set_text_color(0, 0, 0)  # Black text
-        self.cell(0, 10, "www.ffw-windischletten.de", 0, 0, 'C')
+        
+        # Footer with all required business information using dynamic settings
+        # Calculate center of page (not just printable area) to get true centering
+        page_center = self.w / 2
+        # Get the width of the text to center properly
+        vereins_width = self.get_string_width(vereins_name)
+        contact_width = self.get_string_width(f"{website} | {contact_email}")
+        
+        # Set x position to center the text on the page, not just within printable area
+        self.set_x(page_center - vereins_width / 2)
+        self.cell(vereins_width, 4, f"{vereins_name}", 0, 1)
+        
+        self.set_x(page_center - contact_width / 2)
+        self.cell(contact_width, 4, f"{website} | {contact_email}", 0, 1)
 
 def generate_invitation_pdf(invite, settings):
     """
@@ -140,6 +192,14 @@ def generate_invitation_pdf(invite, settings):
     # Lösche alte PDF-Dateien, um Speicherplatz zu sparen
     cleanup_old_pdf_files()
     
+    # Store settings in current_app.config to make them available to the footer method
+    try:
+        from flask import current_app
+        # Update the CURRENT_SETTINGS with the passed settings
+        current_app.config['CURRENT_SETTINGS'] = settings
+    except:
+        pass
+    
     # Vorbereitung: Veranstaltungsinformationen aus den Settings extrahieren
     vereins_name = settings.get("vereins_name", "")
     event_name = settings.get("event_name", "")
@@ -157,17 +217,28 @@ def generate_invitation_pdf(invite, settings):
         except ValueError:
             formatted_date = event_date
     
-    # PDF erstellen
-    pdf = InvitationPDF()
+    # PDF erstellen with settings
+    pdf = InvitationPDF(settings=settings)
     pdf.add_page()
     
-    # 1. Absender (eigener Verein) - oben links unter dem Briefkopf
-    pdf.set_font('Arial', '', 8)
-    pdf.cell(0, 5, vereins_name, 0, 1)
-    pdf.cell(0, 5, f"Datum: {datetime.now().strftime('%d.%m.%Y')}", 0, 1)
-    pdf.ln(15)
+    # Dynamische Kontaktdaten aus den Einstellungen holen
+    contact_address = settings.get("contact_address", "Musterstraße 123, 12345 Musterstadt")
     
-    # 2. Empfänger (eingeladener Verein) - links
+    # Adresse für die Rücksendeadresse vorbereiten (nur Straße und Ort)
+    address_parts = contact_address.split(',')
+    short_address = address_parts[0] if len(address_parts) > 0 else contact_address
+    
+    # Nur die Rücksendeadresse (kleinere Schrift, im Briefkopf)
+    # Wir entfernen den Briefkopf mit dem umrandeten Absender oben
+    pdf.set_xy(25, 45)
+    pdf.set_font('Arial', '', 7)
+    pdf.cell(0, 3, f"{vereins_name} · {short_address} · {address_parts[1].strip() if len(address_parts) > 1 else ''}", 0, 1, 'L')
+    
+    # Anschriftenfeld - genau nach DIN 5008 (40 x 85 mm links)
+    empfaenger_y = 50  # Startposition für den Empfänger
+    
+    # Empfänger (eingeladener Verein) - präzise DIN 5008-konforme Formatierung
+    pdf.set_xy(25, empfaenger_y)
     pdf.set_font('Arial', '', 11)
     if invite.ansprechpartner:
         pdf.cell(0, 5, invite.ansprechpartner, 0, 1)
@@ -176,63 +247,108 @@ def generate_invitation_pdf(invite, settings):
         pdf.cell(0, 5, invite.strasse, 0, 1)
     if invite.plz and invite.ort:
         pdf.cell(0, 5, f"{invite.plz} {invite.ort}", 0, 1)
-    pdf.ln(20)
     
-    # 3. Überschrift "Einladung zum Jubiläum" mit Schriftgröße 20
-    pdf.set_font('Arial', 'B', 20)
-    pdf.cell(0, 10, "Einladung zum Jubiläum", 0, 1, 'C')
+    # Infoblock auf der rechten Seite - nur Datum gemäß DIN 5008
+    info_x = pdf.w - 80  # Startposition für Infoblock
+    info_y = 50  # Gleiche Höhe wie das Anschriftenfeld
+    
+    # Nur Datum im Infoblock (Ihr/Unser Zeichen entfernt)
+    pdf.set_xy(info_x, info_y)
+    pdf.set_font('Arial', '', 10)
+    pdf.cell(25, 5, "Datum:", 0, 0)
+    pdf.set_font('Arial', '', 10)
+    pdf.cell(30, 5, f"{datetime.now().strftime('%d.%m.%Y')}", 0, 1)
+    
+    # Betreffzeile - exakt 8,4mm unterhalb des Anschriftenfeldes gemäß DIN 5008
+    pdf.set_xy(25, 85)  # Genauer Abstand nach DIN 5008
+    
+    # Betreffzeile fett gedruckt (ohne das Wort "Betreff")
+    pdf.set_font('Arial', 'B', 11)
+    pdf.cell(0, 5, "Einladung zum 150 jährigen Feuerwehrfest", 0, 1, 'L')
+    
+    # Abstand nach der Betreffzeile - eine Leerzeile gemäß DIN 5008
+    pdf.ln(6)
+    
+    # Haupttext mit Schriftgröße 11 (exakt nach DIN 5008 Empfehlung für Arial)
+    pdf.set_font('Arial', '', 11)
+    
+    # Anrede mit Vereinsnamen
+    pdf.multi_cell(0, 6, f"Hallo {invite.verein},", 0, 'L')
+    pdf.ln(6)  # Eine Leerzeile nach DIN 5008
+    
+    # Einladungstext aus den Einstellungen
+    if invite_header:
+        # Trennung der Absätze durch Leerzeilen gemäß DIN 5008
+        paragraphs = invite_header.split("\n\n")
+        for i, paragraph in enumerate(paragraphs):
+            # Ensure the text is safe for PDF generation
+            try:
+                # Try to encode to Latin-1 to catch any potential issues
+                paragraph.encode('latin1')
+                pdf.multi_cell(0, 6, paragraph, 0, 'L')
+            except UnicodeEncodeError:
+                # If encoding fails, replace problematic characters
+                safe_paragraph = ''.join(c if ord(c) < 128 else ' ' for c in paragraph)
+                pdf.multi_cell(0, 6, safe_paragraph, 0, 'L')
+            
+            if i < len(paragraphs) - 1:
+                pdf.ln(6)  # Leerzeile zwischen Absätzen
+    else:
+        # Fallback, falls kein Text in den Einstellungen hinterlegt ist - mit korrekten Leerzeilen
+        pdf.multi_cell(0, 6, f"Anlässlich unseres Festes laden wir Sie herzlich nach {event_location or 'unseren Ort'} ein!", 0, 'L')
+        pdf.ln(6)  # Leerzeile nach DIN 5008
+        
+        pdf.multi_cell(0, 6, f"Festumzug: {formatted_date or 'TBD'}, Aufstellung 13:00 Uhr, Start 13:30 Uhr.", 0, 'L')
+        pdf.ln(6)  # Leerzeile nach DIN 5008
+        
+        pdf.multi_cell(0, 6, f"{vereins_name or 'Wir'} freuen uns auf Ihr Kommen!", 0, 'L')
+    
+    # Abstand vor dem Anmeldebereich - gemäß DIN 5008 durch Absatzformatierung
     pdf.ln(10)
     
-    # 5. Haupttext mit Schriftgröße 12
-    pdf.set_font('Arial', '', 12)
+    # Grußformel gemäß DIN 5008
+    pdf.multi_cell(0, 6, "Wir freuen uns auf euch und ein unvergessliches Fest!", 0, 'L')
+    pdf.ln(12)  # Platz für Unterschrift
     
-    # Fest definierter Text für die Einladung
-    invite_text = """Sehr geehrte Feuerwehrkamerad*innen,
-
-anlässlich unseres 150-jährigen Bestehens laden wir euch herzlich zum
-Jubiläumsfest nach Windischletten ein!
-
-Festumzug: Sonntag, 07.06.2026, Aufstellung 13:00 Uhr, Start 13:30 Uhr in Windischletten.
-
-Danach: Lasst uns gemeinsam auf 150 Jahre anstoßen - Für beste Stimmung sorgen die Itzgrunder Musikanten! 
-
-Jetzt anmelden: Einfach den QR-Code scannen oder uns auf anderem Weg Bescheid geben, mit wie
-vielen Gästen ihr kommt."""
+    # Name des Veranstalters/Unterzeichners
+    pdf.multi_cell(0, 6, f"Eure {vereins_name or 'Festkomitee'}", 0, 'L')
+    pdf.ln(12)  # Abstand nach Unterschriftsbereich
     
-    # Text in mehreren Zeilen ausgeben
-    pdf.multi_cell(0, 8, invite_text, 0, 'L')
-    pdf.ln(10)
+    # Sichtbare Trennung - dünnere Linie nach DIN 5008
+    pdf.set_draw_color(200, 200, 200)  # Hellgrau
+    pdf.line(pdf.l_margin, pdf.get_y(), pdf.w - pdf.r_margin, pdf.get_y())
+    pdf.ln(6)  # Abstand nach Trennlinie
     
-    # Veranstaltungsdetails sind bereits im Haupttext enthalten
-    # Daher keine separate Auflistung mehr nötig
+    # Überschrift für Anmeldung im Anlagebereich
+    pdf.set_font('Arial', 'B', 11)
+    pdf.cell(0, 6, 'Anmeldung:', 0, 1, 'L')
+    pdf.ln(2)
     
-    pdf.ln(5)
-    
-    # 7. QR-Code einfügen zentral mit einer Kantenlänge von 2,6cm (26mm)
-    
-    # QR-Code Pfad ermitteln
+    # QR-Code für die Anmeldung - exakt unter dem "A" von "Anmeldung"
     if invite.qr_code_path and os.path.exists(os.path.join(BASE_DIR, 'app', 'static', invite.qr_code_path)):
         qr_path = os.path.join(BASE_DIR, 'app', 'static', invite.qr_code_path)
-        # QR-Code zentriert einfügen
-        pdf_width = pdf.w
-        qr_width = 25  # QR-Code-Breite in mm (exakt 2,5cm wie gewünscht)
-        # Zentriert innerhalb des verfügbaren Bereichs (unter Berücksichtigung der Ränder)
-        pdf.image(qr_path, x=((pdf_width - 50) - qr_width)/2 + 25, y=pdf.get_y(), w=qr_width)
-        pdf.ln(qr_width + 10)  # Platz nach dem QR-Code lassen
-    else:
-        # Wenn kein QR-Code verfügbar ist, Link anzeigen
-        pdf.ln(5)
-        pdf.set_font('Arial', '', 9)
-        pdf.cell(0, 5, "QR-Code nicht verfügbar. Bitte verwenden Sie folgenden Link:", 0, 1, 'C')
-        pdf.ln(3)
-        pdf.set_text_color(0, 0, 255)  # Blau für den Link
-        pdf.cell(0, 5, invite.link, 0, 1, 'C', link=invite.link)
-        pdf.set_text_color(0, 0, 0)  # Zurück zu schwarz
-        pdf.ln(5)
-            
-    pdf.ln(5)
-    
+        qr_size = 45  # QR-Code-Größe erhöht für bessere Lesbarkeit
+        # Direkt unter dem "A" von Anmeldung positionieren - noch weiter nach links verschoben
+        pdf.image(qr_path, x=21, y=pdf.get_y(), w=qr_size, h=qr_size)
         
+        # Text neben dem QR-Code
+        pdf.set_font('Arial', '', 11)
+        page_width = pdf.w - pdf.l_margin - pdf.r_margin
+        pdf.set_xy(21 + qr_size + 5, pdf.get_y() + 5)
+        # Get base URL from settings if available, otherwise from environment variables or fallback
+        base_url = settings.get("base_url") or os.environ.get('BASE_URL') or "http://localhost:5000"
+        pdf.multi_cell(page_width - qr_size - 5, 6, 
+                      f"QR-Code scannen oder unter:\n{base_url}/respond/{invite.token}", 0, 'L')
+    else:
+        # Fallback ohne QR-Code
+        pdf.set_font('Arial', '', 11)
+        # Get base URL from settings if available, otherwise from environment variables or fallback
+        base_url = settings.get("base_url") or os.environ.get('BASE_URL') or "http://localhost:5000"
+        pdf.multi_cell(0, 6, f"Anmeldung unter: {base_url}/respond/{invite.token}", 0, 'L')
+    
+    # Abstand nach dem QR-Code und Text
+    pdf.ln(qr_size + 2 if invite.qr_code_path and os.path.exists(os.path.join(BASE_DIR, 'app', 'static', invite.qr_code_path)) else 10)
+    
     # PDF speichern
     filename = f"Einladung_{invite.verein}_{invite.token}.pdf"
     filepath = os.path.join(PDF_DIR, filename)
@@ -257,8 +373,16 @@ def generate_all_invitations_pdf(invites, settings):
     # Lösche alte PDF-Dateien, um Speicherplatz zu sparen
     cleanup_old_pdf_files()
     
-    # PDF erstellen
-    pdf = InvitationPDF()
+    # Store settings in current_app.config to make them available to the footer method
+    try:
+        from flask import current_app
+        # Update the CURRENT_SETTINGS with the passed settings
+        current_app.config['CURRENT_SETTINGS'] = settings
+    except:
+        pass
+    
+    # PDF erstellen with settings
+    pdf = InvitationPDF(settings=settings)
     
     for i, invite in enumerate(invites):
         pdf.add_page()
@@ -274,6 +398,19 @@ def generate_all_invitations_pdf(invites, settings):
         event_time = settings.get("event_time", "")
         invite_header = settings.get("invite_header", "")
         
+        # Dynamische Kontaktdaten aus den Einstellungen holen
+        contact_address = settings.get("contact_address", "Musterstraße 123, 12345 Musterstadt")
+        
+        # Adresse für die Rücksendeadresse vorbereiten (nur Straße und Ort)
+        address_parts = contact_address.split(',')
+        short_address = address_parts[0] if len(address_parts) > 0 else contact_address
+        
+        # Nur die Rücksendeadresse (kleinere Schrift, im Briefkopf)
+        # Wir entfernen den Briefkopf mit dem umrandeten Absender oben
+        pdf.set_xy(25, 45)
+        pdf.set_font('Arial', '', 7)
+        pdf.cell(0, 3, f"{vereins_name} · {short_address} {address_parts[1].strip() if len(address_parts) > 1 else ''}", 0, 1, 'L')
+        
         # Formatiere das Datum
         formatted_date = ""
         if event_date:
@@ -283,12 +420,11 @@ def generate_all_invitations_pdf(invites, settings):
             except ValueError:
                 formatted_date = event_date
         
-        pdf.set_font('Arial', '', 8)
-        pdf.cell(0, 5, vereins_name, 0, 1)
-        pdf.cell(0, 5, f"Datum: {datetime.now().strftime('%d.%m.%Y')}", 0, 1)
-        pdf.ln(15)
+        # Anschriftenfeld - genau nach DIN 5008 (40 x 85 mm links)
+        empfaenger_y = 50  # Startposition für den Empfänger (Anschriftenzone)
         
-        # 2. Empfänger (eingeladener Verein)
+        # Empfänger (eingeladener Verein) - präzise DIN 5008-konforme Formatierung
+        pdf.set_xy(25, empfaenger_y)
         pdf.set_font('Arial', '', 11)
         if invite.ansprechpartner:
             pdf.cell(0, 5, invite.ansprechpartner, 0, 1)
@@ -297,67 +433,107 @@ def generate_all_invitations_pdf(invites, settings):
             pdf.cell(0, 5, invite.strasse, 0, 1)
         if invite.plz and invite.ort:
             pdf.cell(0, 5, f"{invite.plz} {invite.ort}", 0, 1)
-        pdf.ln(20)
         
-        # 3. Überschrift "Einladung zum Jubiläum" mit Schriftgröße 20
-        pdf.set_font('Arial', 'B', 20)
-        pdf.cell(0, 10, "Einladung zum Jubiläum", 0, 1, 'C')
+        # Infoblock auf der rechten Seite - nur Datum gemäß DIN 5008
+        info_x = pdf.w - 80  # Startposition für Infoblock
+        info_y = 50  # Gleiche Höhe wie das Anschriftenfeld
+        
+        # Nur Datum im Infoblock (Ihr/Unser Zeichen entfernt)
+        pdf.set_xy(info_x, info_y)
+        pdf.set_font('Arial', '', 10)
+        pdf.cell(25, 5, "Datum:", 0, 0)
+        pdf.set_font('Arial', '', 10)
+        pdf.cell(30, 5, f"{datetime.now().strftime('%d.%m.%Y')}", 0, 1)
+        
+        # Betreffzeile - exakt 8,4mm unterhalb des Anschriftenfeldes gemäß DIN 5008
+        pdf.set_xy(25, 85)  # Genauer Abstand nach DIN 5008
+        
+        # Betreffzeile fett gedruckt (ohne das Wort "Betreff")
+        pdf.set_font('Arial', 'B', 11)
+        pdf.cell(0, 5, "Einladung zum 150 jährigen Feuerwehrfest", 0, 1, 'L')
+        # Abstand nach der Betreffzeile - eine Leerzeile gemäß DIN 5008
+        pdf.ln(6)
+        
+        # Haupttext mit Schriftgröße 11 (exakt nach DIN 5008 Empfehlung für Arial)
+        pdf.set_font('Arial', '', 11)
+        
+        # Anrede mit Vereinsnamen
+        pdf.multi_cell(0, 6, f"Hallo {invite.verein},", 0, 'L')
+        pdf.ln(6)  # Eine Leerzeile nach DIN 5008
+        
+        # Einladungstext aus den Einstellungen
+        if invite_header:
+            # Trennung der Absätze durch Leerzeilen gemäß DIN 5008
+            paragraphs = invite_header.split("\n\n")
+            for i, paragraph in enumerate(paragraphs):
+                # Ensure the text is safe for PDF generation
+                try:
+                    # Try to encode to Latin-1 to catch any potential issues
+                    paragraph.encode('latin1')
+                    pdf.multi_cell(0, 6, paragraph, 0, 'L')
+                except UnicodeEncodeError:
+                    # If encoding fails, replace problematic characters
+                    safe_paragraph = ''.join(c if ord(c) < 128 else ' ' for c in paragraph)
+                    pdf.multi_cell(0, 6, safe_paragraph, 0, 'L')
+                
+                if i < len(paragraphs) - 1:
+                    pdf.ln(6)  # Leerzeile zwischen Absätzen
+        else:
+            # Fallback, falls kein Text in den Einstellungen hinterlegt ist - mit korrekten Leerzeilen
+            pdf.multi_cell(0, 6, f"Anlässlich unseres Festes laden wir euch herzlich nach {event_location or 'unseren Ort'} ein!", 0, 'L')
+            pdf.ln(6)  # Leerzeile nach DIN 5008
+            
+            pdf.multi_cell(0, 6, f"Festumzug: {formatted_date or 'TBD'}, Aufstellung 13:00 Uhr, Start 13:30 Uhr.", 0, 'L')
+            pdf.ln(6)  # Leerzeile nach DIN 5008
+            
+            pdf.multi_cell(0, 6, f"{vereins_name or 'Wir'} freuen uns auf Ihr Kommen!", 0, 'L')
+        
+        # Abstand vor dem Anmeldebereich - gemäß DIN 5008 durch Absatzformatierung
         pdf.ln(10)
         
-        # 5. Haupttext mit Schriftgröße 12
-        pdf.set_font('Arial', '', 12)
+        # Grußformel gemäß DIN 5008
+        pdf.multi_cell(0, 6, "Wir freuen uns auf euch und ein unvergessliches Fest!", 0, 'L')
+        pdf.ln(12)  # Platz für Unterschrift
         
-        # Fest definierter Text für die Einladung
-        invite_text = """Sehr geehrte Feuerwehrkamerad*innen,
-
-anlässlich unseres 150-jährigen Bestehens laden wir euch herzlich zum
-Jubiläumsfest nach Windischletten ein!
-
-Festumzug: Sonntag, 07.06.2026, Aufstellung 13:00 Uhr, Start 13:30 Uhr in Windischletten.
-
-Danach: Lasst uns gemeinsam auf 150 Jahre anstoßen - Für beste Stimmung sorgen die Itzgrunder Musikanten! 
-
-Jetzt anmelden: Einfach den QR-Code scannen oder uns auf anderem Weg Bescheid geben, mit wie
-vielen Gästen ihr kommt."""
+        # Name des Veranstalters/Unterzeichners
+        pdf.multi_cell(0, 6, f"Eure {vereins_name or 'Festkomitee'}", 0, 'L')
+        pdf.ln(12)  # Abstand nach Unterschriftsbereich
         
-        # Text in mehreren Zeilen ausgeben
-        pdf.multi_cell(0, 8, invite_text, 0, 'L')
-        pdf.ln(10)
+        # Sichtbare Trennung - dünnere Linie nach DIN 5008
+        pdf.set_draw_color(200, 200, 200)  # Hellgrau
+        pdf.line(pdf.l_margin, pdf.get_y(), pdf.w - pdf.r_margin, pdf.get_y())
+        pdf.ln(6)  # Abstand nach Trennlinie
         
-        # Veranstaltungsdetails sind bereits im Haupttext enthalten
-        # Daher keine separate Auflistung mehr nötig
+        # Überschrift für Anmeldung im Anlagebereich
+        pdf.set_font('Arial', 'B', 11)
+        pdf.cell(0, 6, 'Anmeldung:', 0, 1, 'L')
+        pdf.ln(2)
         
-        pdf.ln(5)
-        
-        # 7. QR-Code einfügen zentral mit einer Kantenlänge von 2,6cm (26mm)
-        
-        # QR-Code Pfad ermitteln
+        # QR-Code für die Anmeldung - exakt unter dem "A" von "Anmeldung"
         if invite.qr_code_path and os.path.exists(os.path.join(BASE_DIR, 'app', 'static', invite.qr_code_path)):
             qr_path = os.path.join(BASE_DIR, 'app', 'static', invite.qr_code_path)
-            # QR-Code zentriert einfügen
-            pdf_width = pdf.w
-            qr_width = 26  # QR-Code-Breite in mm (exakt 2,6cm wie gewünscht)
-            # Zentriert innerhalb des verfügbaren Bereichs (unter Berücksichtigung der Ränder)
-            pdf.image(qr_path, x=((pdf_width - 50) - qr_width)/2 + 25, y=pdf.get_y(), w=qr_width)
-            pdf.ln(qr_width + 10)  # Platz nach dem QR-Code lassen
+            qr_size = 45  # QR-Code-Größe erhöht für bessere Lesbarkeit
+            # Direkt unter dem "A" von Anmeldung positionieren - noch weiter nach links verschoben
+            pdf.image(qr_path, x=21, y=pdf.get_y(), w=qr_size, h=qr_size)
+            
+            # Text neben dem QR-Code
+            pdf.set_font('Arial', '', 11)
+            page_width = pdf.w - pdf.l_margin - pdf.r_margin
+            pdf.set_xy(21 + qr_size + 5, pdf.get_y() + 5)
+            # Get base URL from settings if available, otherwise from environment variables or fallback
+            base_url = settings.get("base_url") or os.environ.get('BASE_URL') or "http://localhost:5000"
+            pdf.multi_cell(page_width - qr_size - 5, 6, 
+                          f"QR-Code scannen oder unter:\n{base_url}/respond?token={invite.token}", 0, 'L')
         else:
-            # Wenn kein QR-Code verfügbar ist, Link anzeigen
-            pdf.ln(5)
-            pdf.set_font('Arial', '', 9)
-            pdf.cell(0, 5, "QR-Code nicht verfügbar. Bitte verwenden Sie folgenden Link:", 0, 1, 'C')
-            pdf.ln(3)
-            pdf.set_text_color(0, 0, 255)  # Blau für den Link
-            pdf.cell(0, 5, invite.link, 0, 1, 'C', link=invite.link)
-            pdf.set_text_color(0, 0, 0)  # Zurück zu schwarz
-            pdf.ln(5)
+            # Fallback ohne QR-Code
+            pdf.set_font('Arial', '', 11)
+            # Get base URL from settings if available, otherwise from environment variables or fallback
+            base_url = settings.get("base_url") or os.environ.get('BASE_URL') or "http://localhost:5000"
+            pdf.multi_cell(0, 6, f"Anmeldung unter: {base_url}/respond?token={invite.token}", 0, 'L')
         
-        pdf.ln(5)
-        
-        # 8. Abschluss
-        pdf.set_font('Arial', '', 11)
-        pdf.cell(0, 8, "Mit freundlichen Grüßen", 0, 1)
-        pdf.ln(10)
-        pdf.cell(0, 8, vereins_name, 0, 1)
+        # Abstand nach dem QR-Code und Text
+        qr_size = 45  # Konsistente QR-Code-Größe erhöht für bessere Lesbarkeit
+        pdf.ln(qr_size + 2 if invite.qr_code_path and os.path.exists(os.path.join(BASE_DIR, 'app', 'static', invite.qr_code_path)) else 10)
     
     # PDF speichern
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

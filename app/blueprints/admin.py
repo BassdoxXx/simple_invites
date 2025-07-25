@@ -265,6 +265,10 @@ def settings():
         "event_date": "",  # Format: YYYY-MM-DD für das Event-Datum
         "event_time": "",  # Format: HH:MM Uhr
         "event_location": "",  # Veranstaltungsort
+        "contact_email": "",  # E-Mail-Adresse für Kontakt
+        "contact_address": "",  # Adresse des Vereins für Briefkopf
+        "contact_phone": "",  # Telefonnummer für Kontakt
+        "website": "",  # Website des Vereins
         "max_tables": "90",
         "max_persons_per_table": "10",
         "enable_tables": "false"
