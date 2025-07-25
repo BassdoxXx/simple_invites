@@ -1,0 +1,70 @@
+{% extends "layout_base.html" %}
+
+{% block title %}Static File Debug{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-4">
+    <h1 class="text-2xl font-bold mb-4">Static File Debug</h1>
+    
+    <div class="bg-white shadow-md rounded p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-4">CSS Test</h2>
+        <p>The box below should have a green background if styles.css is loading correctly:</p>
+        <div id="css-test-box" class="mt-4 p-4 css-test-box">
+            This box should have custom styling from styles.css
+        </div>
+    </div>
+    
+    <div class="bg-white shadow-md rounded p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-4">JavaScript Test</h2>
+        <p>Click the button to test if JavaScript files are loading:</p>
+        <button id="js-test-button" class="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Test JavaScript
+        </button>
+        <div id="js-test-result" class="mt-2 p-4"></div>
+    </div>
+    
+    <div class="bg-white shadow-md rounded p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-4">Static URLs</h2>
+        <ul class="list-disc pl-6">
+            <li>CSS URL: <code>{{ url_for('static', filename='css/styles.css') }}</code></li>
+            <li>JS URL: <code>{{ url_for('static', filename='js/admin.js') }}</code></li>
+            <li>Image Example: <img src="{{ url_for('static', filename='img/test.png') }}" alt="Test Image" class="mt-2" onerror="this.alt='Image not found'"></li>
+        </ul>
+    </div>
+    
+    <div class="bg-white shadow-md rounded p-6">
+        <h2 class="text-xl font-semibold mb-4">Network Requests</h2>
+        <p>Open your browser's developer tools to inspect network requests for static files.</p>
+        <div id="network-info" class="mt-4"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Test JavaScript loading
+    const jsTestButton = document.getElementById('js-test-button');
+    const jsTestResult = document.getElementById('js-test-result');
+    
+    jsTestButton.addEventListener('click', function() {
+        // Try to access a function from admin.js
+        if (typeof window.adminJsLoaded === 'function') {
+            jsTestResult.textContent = "Success: admin.js loaded correctly!";
+            jsTestResult.className = "mt-2 p-4 bg-green-100";
+            window.adminJsLoaded();
+        } else {
+            jsTestResult.textContent = "Error: admin.js not loaded properly.";
+            jsTestResult.className = "mt-2 p-4 bg-red-100";
+        }
+    });
+    
+    // Network information
+    const networkInfo = document.getElementById('network-info');
+    networkInfo.innerHTML = `
+        <p>Page loaded at: ${new Date().toLocaleTimeString()}</p>
+        <p>User Agent: ${navigator.userAgent}</p>
+    `;
+});
+</script>
+{% endblock %}

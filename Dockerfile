@@ -15,7 +15,7 @@ WORKDIR /app
 # Installiere Abhängigkeiten
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install gunicorn
+RUN pip install gunicorn whitenoise
 
 # Kopiere den gesamten Code
 COPY . .
@@ -23,17 +23,21 @@ COPY . .
 # Copy built CSS from node build stage
 COPY --from=build-stage /app/app/static/css/styles.css /app/app/static/css/
 
-# Ensure all static files are copied correctly
-COPY app/static/ /app/app/static/
-RUN ls -la /app/app/static/css/
-RUN ls -la /app/app/static/js/
+# Explicitly copy static files to ensure they exist in the container
+COPY app/static/css/styles.css /app/app/static/css/
+COPY app/static/js/admin.js /app/app/static/js/
+COPY app/static/js/charts.js /app/app/static/js/
 
-# Make sure static directories have proper permissions
+# Make sure static directories exist with proper permissions
+RUN mkdir -p /app/app/static/css /app/app/static/js
 RUN chmod -R 755 /app/app/static
 
-# Add explicit permissions for CSS and JS files
-RUN find /app/app/static -name "*.css" -exec chmod 644 {} \;
-RUN find /app/app/static -name "*.js" -exec chmod 644 {} \;
+# Debug: List static directory structure to verify files
+RUN find /app/app/static -type f | sort
+
+# Debug: List static files to ensure they exist
+RUN ls -la /app/app/static/css/
+RUN ls -la /app/app/static/js/
 
 # Setze Umgebungsvariablen für Flask
 ENV FLASK_APP=app/main.py
@@ -42,7 +46,8 @@ ENV FLASK_ENV=production
 # Create a small script to run the app
 RUN echo 'from app.main import app as application' > wsgi.py
 
-# Ensure all dependencies are installed
+# Add whitenoise to requirements if not already present
+RUN if ! grep -q "whitenoise" requirements.txt; then echo "whitenoise" >> requirements.txt; fi
 
 # Copy gunicorn config
 COPY gunicorn.conf.py /app/gunicorn.conf.py
