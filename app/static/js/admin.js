@@ -1,11 +1,5 @@
 // Verbesserte filterTable-Funktion, die auch Tischkarten filtert
 
-// Helper function for debug templates
-window.adminJsLoaded = function() {
-  console.log("admin.js loaded successfully");
-  return true;
-};
-
 function filterTable() {
   const searchInput = document.getElementById("searchInput").value.toLowerCase();
   const tischFilter = document.getElementById("tischFilter").value;

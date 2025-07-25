@@ -8,7 +8,6 @@ from app.blueprints.auth import auth_bp
 from app.blueprints.admin import admin_bp
 from app.blueprints.public import public_bp
 from app.blueprints.pdf import pdf_bp
-from app.blueprints.debug import debug_bp
 import os
 import secrets
 from whitenoise import WhiteNoise
@@ -16,13 +15,9 @@ from whitenoise import WhiteNoise
 def create_app(testing=False):
     app = Flask(__name__)
     
-    # Initialize WhiteNoise for static file serving with proper MIME types
+    # Initialize WhiteNoise for serving static files
     app.wsgi_app = WhiteNoise(app.wsgi_app, root=os.path.join(os.path.dirname(__file__), 'static'))
-    
-    # Ensure MIME types are registered
-    import mimetypes
-    mimetypes.add_type('text/css', '.css')
-    mimetypes.add_type('text/javascript', '.js')
+    app.wsgi_app.add_files(os.path.join(os.path.dirname(__file__), 'static'), prefix='static/')
     
     # Datenbank im Projektverzeichnis speichern
     data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'instance'))
@@ -67,7 +62,6 @@ def create_app(testing=False):
     app.register_blueprint(admin_bp, url_prefix="/admin")
     app.register_blueprint(public_bp)
     app.register_blueprint(pdf_bp, url_prefix="/pdf")
-    app.register_blueprint(debug_bp, url_prefix="/debug")
 
     # CSRF-Schutz aktivieren
     csrf = CSRFProtect(app)

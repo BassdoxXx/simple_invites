@@ -4,11 +4,9 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      # Don't mount static directory, use the one built into the container
+      - ./app/static:/app/app/static
       - ./data/simple_invites:/data/simple_invites
     environment:
       - FLASK_ENV=production
-      - APP_HOSTNAME=https://your-production-hostname.com  # Update this with your actual production URL
       - SECRET_KEY=dein_geheimer_schluessel
       - PDF_CLEANUP_MINUTES=30
-      - DEBUG=True  # Enable debug mode to see more detailed errors
