@@ -12,7 +12,9 @@ import os
 import secrets
 
 def create_app(testing=False):
-    app = Flask(__name__)
+    import os
+    static_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'static'))
+    app = Flask(__name__, static_folder=static_folder)
     
     # Datenbank im Projektverzeichnis speichern
     data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'instance'))
