@@ -6,26 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Simple Invites{% endblock %}</title>
     
-    <!-- Tailwind CSS via CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Optional: Tailwind Konfiguration -->
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              primary: '#3490dc',
-              secondary: '#ffed4a',
-              danger: '#e3342f',
-            }
-          }
-        }
-      }
-    </script>
-    
-    <!-- Deine eigenen zusätzlichen Styles -->
+    <!-- Built Tailwind CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    
+    <!-- Additional styles -->
+    <style>
+        /* Additional inline styles if needed */
+    </style>
     {% block extra_head %}{% endblock %}
 </head>
 <body class="bg-gray-100 text-gray-900 min-h-screen flex flex-col">
