@@ -1,13 +1,11 @@
 from app import create_app, db
-from flask import render_template, jsonify
+from flask import render_template
 from flask_migrate import Migrate
 from app.utils.settings_utils import check_hostname_config
 from app.utils.db_fixes import apply_model_fixes
 from app.utils.pdf_utils import cleanup_old_pdf_files
-from app.utils.static_utils import debug_static_files
 import threading
 import time
-import os
 
 app = create_app()
 migrate = Migrate(app, db)
@@ -29,13 +27,6 @@ with app.app_context():
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template("error_404.html"), 404
-
-@app.route("/check-static-files")
-def check_static_route():
-    """Route zum Überprüfen der statischen Dateien"""
-    static_info = debug_static_files()
-    app.logger.info(f"Static files check: {static_info}")
-    return jsonify(static_info)
 
 # Background thread for periodic PDF cleanup
 def periodic_pdf_cleanup():
