@@ -1,3 +1,4 @@
+
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -10,6 +11,8 @@ RUN pip install gunicorn
 # Kopiere den gesamten Code
 COPY . .
 
+# Kopiere das gesamte static-Verzeichnis an die richtige Stelle
+COPY app/static /app/static
 # Setze Umgebungsvariablen für Flask
 ENV FLASK_APP=app/main.py
 ENV FLASK_ENV=production
