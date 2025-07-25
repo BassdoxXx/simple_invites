@@ -16,6 +16,11 @@ from whitenoise import WhiteNoise
 def create_app(testing=False):
     app = Flask(__name__)
     
+    # Ensure MIME types are registered system-wide
+    import mimetypes
+    mimetypes.add_type('text/css', '.css')
+    mimetypes.add_type('application/javascript', '.js')
+    
     # Initialize WhiteNoise for static file serving with proper MIME types
     app.wsgi_app = WhiteNoise(
         app.wsgi_app,
@@ -25,14 +30,8 @@ def create_app(testing=False):
         autorefresh=True
     )
     
-    # Add explicit MIME type mappings for WhiteNoise
-    app.wsgi_app.add_mime_type('css', 'text/css')
-    app.wsgi_app.add_mime_type('js', 'application/javascript')
-    
-    # Ensure MIME types are registered system-wide
-    import mimetypes
-    mimetypes.add_type('text/css', '.css')
-    mimetypes.add_type('application/javascript', '.js')
+    # Add static files with correct MIME types
+    app.wsgi_app.add_files(os.path.join(os.path.dirname(__file__), 'static'), prefix='static/')
     
     # Datenbank im Projektverzeichnis speichern
     data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'instance'))
