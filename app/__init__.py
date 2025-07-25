@@ -38,6 +38,8 @@ def create_app(testing=False):
 
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:' if testing else f"sqlite:///{db_path}"
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['DB_AUTO_FIX'] = os.environ.get('DB_AUTO_FIX', 'True').lower() in ('true', '1', 't')
+    app.config['PDF_CLEANUP_MINUTES'] = int(os.environ.get('PDF_CLEANUP_MINUTES', '15'))
 
     db.init_app(app)
 

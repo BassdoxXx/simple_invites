@@ -3,8 +3,10 @@ Utilities for PDF invitation generation.
 """
 
 import os
+import glob
+import time
 from fpdf import FPDF
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import current_app
 
 # Base directory of project
@@ -14,6 +16,77 @@ LOGO_PATH = os.path.join(BASE_DIR, 'app', 'static', 'images', 'logo.png')
 
 # Stellen Sie sicher, dass das Verzeichnis existiert
 os.makedirs(PDF_DIR, exist_ok=True)
+
+def cleanup_old_pdf_files(max_age_minutes=15):
+    """
+    Löscht PDF-Dateien, die älter als max_age_minutes sind.
+    
+    Args:
+        max_age_minutes: Maximales Alter in Minuten, bevor Dateien gelöscht werden
+    """
+    try:
+        # Versuche, den konfigurierten Wert aus der App-Konfiguration zu lesen (falls vorhanden)
+        try:
+            if current_app and current_app.config and 'PDF_CLEANUP_MINUTES' in current_app.config:
+                max_age_minutes = int(current_app.config['PDF_CLEANUP_MINUTES'])
+        except (RuntimeError, ValueError, TypeError):
+            # Wenn kein App-Kontext oder ungültiger Wert, behalte den Standard bei
+            pass
+            
+        # Alle PDF-Dateien im Verzeichnis finden
+        pdf_files = glob.glob(os.path.join(PDF_DIR, "*.pdf"))
+        
+        # Aktuelle Zeit für den Vergleich
+        now = time.time()
+        
+        # Zähle gelöschte Dateien
+        deleted_count = 0
+        error_count = 0
+        
+        # Gehe durch alle PDF-Dateien
+        for pdf_file in pdf_files:
+            try:
+                # Ermittle das Änderungsdatum der Datei
+                file_mod_time = os.path.getmtime(pdf_file)
+                
+                # Wenn die Datei älter als max_age_minutes ist, lösche sie
+                if now - file_mod_time > max_age_minutes * 60:
+                    try:
+                        os.remove(pdf_file)
+                        deleted_count += 1
+                    except PermissionError:
+                        # Datei ist wahrscheinlich noch in Benutzung - überspringen
+                        error_count += 1
+                        pass
+                    except Exception as e:
+                        error_count += 1
+                        try:
+                            current_app.logger.error(f"Error deleting PDF file {pdf_file}: {e}")
+                        except:
+                            print(f"Error deleting PDF file {pdf_file}: {e}")
+            except Exception:
+                # Fehler beim Lesen der Datei-Metadaten überspringen
+                continue
+                
+        # Logge nur, wenn tatsächlich Dateien gelöscht wurden
+        if deleted_count > 0:
+            try:
+                current_app.logger.info(f"PDF cleanup: deleted {deleted_count} files older than {max_age_minutes} minutes")
+            except:
+                print(f"PDF cleanup: deleted {deleted_count} files older than {max_age_minutes} minutes")
+                
+        # Logge Fehler nur, wenn welche aufgetreten sind
+        if error_count > 0:
+            try:
+                current_app.logger.warning(f"PDF cleanup: encountered {error_count} errors while trying to delete files")
+            except:
+                print(f"PDF cleanup: encountered {error_count} errors while trying to delete files")
+                
+    except Exception as e:
+        try:
+            current_app.logger.error(f"Error during PDF cleanup: {e}")
+        except:
+            print(f"Error during PDF cleanup: {e}")
 
 class InvitationPDF(FPDF):
     """Custom PDF class for invitation generation"""
@@ -63,6 +136,9 @@ def generate_invitation_pdf(invite, settings):
     """
     # Stelle sicher, dass das PDF-Verzeichnis existiert
     os.makedirs(PDF_DIR, exist_ok=True)
+    
+    # Lösche alte PDF-Dateien, um Speicherplatz zu sparen
+    cleanup_old_pdf_files()
     
     # Vorbereitung: Veranstaltungsinformationen aus den Settings extrahieren
     vereins_name = settings.get("vereins_name", "")
@@ -177,6 +253,9 @@ def generate_all_invitations_pdf(invites, settings):
     """
     # Stelle sicher, dass das PDF-Verzeichnis existiert
     os.makedirs(PDF_DIR, exist_ok=True)
+    
+    # Lösche alte PDF-Dateien, um Speicherplatz zu sparen
+    cleanup_old_pdf_files()
     
     # PDF erstellen
     pdf = InvitationPDF()

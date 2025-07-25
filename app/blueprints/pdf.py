@@ -5,7 +5,7 @@ Routes for PDF generation and QR code management
 from flask import Blueprint, render_template, redirect, url_for, flash, send_from_directory, current_app, request
 from flask_login import login_required
 from app.models import Invite, db
-from app.utils.pdf_utils import generate_invitation_pdf, generate_all_invitations_pdf
+from app.utils.pdf_utils import generate_invitation_pdf, generate_all_invitations_pdf, PDF_DIR
 from app.utils.qr_utils import generate_qr
 from app.utils.settings_utils import get_multiple_settings, get_base_url
 import os
@@ -18,6 +18,17 @@ def index():
     """Show the PDF generation interface"""
     invites = Invite.query.order_by(Invite.verein).all()
     return render_template("generate_pdfs.html", invites=invites)
+
+@pdf_bp.route("/serve/<path:filename>", methods=["GET"])
+@login_required
+def serve_pdf(filename):
+    """Serve a PDF file for download (cleanup happens via scheduled task)"""
+    
+    # Get the base filename
+    base_filename = os.path.basename(filename)
+    
+    # Simply serve the file - cleanup will be handled by the cleanup_old_pdf_files function
+    return send_from_directory(PDF_DIR, base_filename, as_attachment=True)
 
 @pdf_bp.route("/generate/<token>", methods=["GET"])
 @login_required
@@ -42,7 +53,7 @@ def generate_pdf(token):
     filename = os.path.basename(pdf_path)
     
     flash(f"PDF für {invite.verein} wurde erstellt.", "success")
-    return redirect(url_for('static', filename=pdf_path))
+    return redirect(url_for('pdf.serve_pdf', filename=filename))
 
 @pdf_bp.route("/generate-selected-pdfs", methods=["POST"])
 @login_required
@@ -65,8 +76,9 @@ def generate_selected_pdfs():
         # Get all invites
         invites = Invite.query.order_by(Invite.verein).all()
         pdf_path = generate_all_invitations_pdf(invites, settings)
+        filename = os.path.basename(pdf_path)
         flash(f"{len(invites)} Einladungen wurden in einer PDF-Datei zusammengefasst.", "success")
-        return redirect(url_for('static', filename=pdf_path))
+        return redirect(url_for('pdf.serve_pdf', filename=filename))
     else:
         # Get selected invite tokens
         selected_tokens = request.form.getlist('selected_invites')
@@ -81,15 +93,18 @@ def generate_selected_pdfs():
         # Wenn nur ein Eintrag ausgewählt wurde, generiere eine einzelne PDF
         if len(invites) == 1:
             pdf_path = generate_invitation_pdf(invites[0], settings)
+            filename = os.path.basename(pdf_path)
             flash(f"PDF für {invites[0].verein} wurde erstellt.", "success")
-            return redirect(url_for('static', filename=pdf_path))
+            return redirect(url_for('pdf.serve_pdf', filename=filename))
         # Ansonsten generiere eine PDF mit allen ausgewählten Einladungen
         else:
             pdf_path = generate_all_invitations_pdf(invites, settings)
+            filename = os.path.basename(pdf_path)
             flash(f"{len(invites)} ausgewählte Einladungen wurden in einer PDF-Datei zusammengefasst.", "success")
-            return redirect(url_for('static', filename=pdf_path))
+            return redirect(url_for('pdf.serve_pdf', filename=filename))
     
-    return redirect(url_for('static', filename=pdf_path))
+    # This line should never be reached, as all paths above return
+    return redirect(url_for('admin.index'))
 
 @pdf_bp.route("/generate-all", methods=["GET"])
 @login_required
@@ -109,7 +124,8 @@ def generate_all_pdfs():
     
     # Generate the PDF
     pdf_path = generate_all_invitations_pdf(invites, settings)
+    filename = os.path.basename(pdf_path)
     
     flash(f"{len(invites)} Einladungen wurden in einer PDF-Datei zusammengefasst.", "success")
-    return redirect(url_for('static', filename=pdf_path))
+    return redirect(url_for('pdf.serve_pdf', filename=filename))
 

@@ -9,3 +9,4 @@ services:
     environment:
       - FLASK_ENV=production
       - SECRET_KEY=dein_geheimer_schluessel
+      - PDF_CLEANUP_MINUTES=30
