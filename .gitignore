@@ -359,3 +359,5 @@ $RECYCLE.BIN/
 
 instance/simple_invites.db
 *.db
+
+*.pdf
