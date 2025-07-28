@@ -142,6 +142,8 @@ def legal_impressum():
     # Get event info for countdown banner
     event_name_setting = Setting.query.filter_by(key="event_name").first()
     event_date_setting = Setting.query.filter_by(key="event_date").first()
+    vereins_name_setting = Setting.query.filter_by(key="vereins_name").first()
+
     
     # Calculate days until event for countdown
     days_until_event = None
@@ -159,7 +161,8 @@ def legal_impressum():
         "public_legal_impressum.html",
         event_name=event_name_setting.value if event_name_setting else "",
         days_until_event=days_until_event,
-        event_date=event_date_formatted
+        event_date=event_date_formatted,
+        vereins_name=vereins_name_setting.value if vereins_name_setting else ""
     )
 
 @public_bp.route("/datenschutz")
@@ -167,6 +170,7 @@ def legal_datenschutz():
     # Get event info for countdown banner
     event_name_setting = Setting.query.filter_by(key="event_name").first()
     event_date_setting = Setting.query.filter_by(key="event_date").first()
+    vereins_name_setting = Setting.query.filter_by(key="vereins_name").first()
     
     # Calculate days until event for countdown
     days_until_event = None
@@ -184,5 +188,6 @@ def legal_datenschutz():
         "public_legal_privacy.html",
         event_name=event_name_setting.value if event_name_setting else "",
         days_until_event=days_until_event,
-        event_date=event_date_formatted
+        event_date=event_date_formatted,
+        vereins_name=vereins_name_setting.value if vereins_name_setting else ""
     )
