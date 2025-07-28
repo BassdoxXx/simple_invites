@@ -96,10 +96,6 @@ def create_app(testing=False):
     def internal_server_error(e):
         return render_template('error_500.html'), 500
         
-    # Kontext-Prozessor für Debug-Modus
-    @app.context_processor
-    def inject_debug():
-        return dict(debug=app.debug)
         
     # CSP-Header hinzufügen
     @app.after_request
