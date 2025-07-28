@@ -7,12 +7,30 @@ public_bp = Blueprint("public", __name__)
 
 @public_bp.route("/")
 def index():
+    # Get settings for the view
     vereins_name_setting = Setting.query.filter_by(key="vereins_name").first()
     event_name_setting = Setting.query.filter_by(key="event_name").first()
+    event_date_setting = Setting.query.filter_by(key="event_date").first()
+    
+    # Calculate days until event for countdown
+    days_until_event = None
+    event_date_formatted = None
+    if event_date_setting and event_date_setting.value:
+        try:
+            event_date = datetime.strptime(event_date_setting.value, "%Y-%m-%d").date()
+            today = datetime.now().date()
+            days_until_event = (event_date - today).days
+            event_date_formatted = event_date.strftime("%d.%m.%Y")
+        except (ValueError, TypeError):
+            # Falls das Datumsformat nicht korrekt ist, ignorieren
+            pass
+            
     return render_template(
         "public_token_input.html",
         vereins_name=vereins_name_setting.value if vereins_name_setting else "",
-        event_name=event_name_setting.value if event_name_setting else ""
+        event_name=event_name_setting.value if event_name_setting else "",
+        days_until_event=days_until_event,
+        event_date=event_date_formatted
     )
 
 @public_bp.route("/find", methods=["POST"])
@@ -32,6 +50,23 @@ def respond(token):
     if not invite:
         flash("Uuupsii! Diesen Token kennen wir nicht. Bitte überprüfe deine Eingabe.", "danger")
         return redirect(url_for("public.index"))
+        
+    # Get settings for the view
+    event_name_setting = Setting.query.filter_by(key="event_name").first()
+    event_date_setting = Setting.query.filter_by(key="event_date").first()
+    
+    # Calculate days until event for countdown
+    days_until_event = None
+    event_date_formatted = None
+    if event_date_setting and event_date_setting.value:
+        try:
+            event_date = datetime.strptime(event_date_setting.value, "%Y-%m-%d").date()
+            today = datetime.now().date()
+            days_until_event = (event_date - today).days
+            event_date_formatted = event_date.strftime("%d.%m.%Y")
+        except (ValueError, TypeError):
+            # Falls das Datumsformat nicht korrekt ist, ignorieren
+            pass
 
     # Einladungstext aus der Datenbank laden
     invite_header = Setting.query.filter_by(key="invite_header").first()
@@ -97,13 +132,57 @@ def respond(token):
         response=response,
         event_name=event_name_setting.value if event_name_setting else "",
         vereins_name=vereins_name_setting.value if vereins_name_setting else "",
-        gast_name=invite.verein
+        gast_name=invite.verein,
+        days_until_event=days_until_event,
+        event_date=event_date_formatted
     )
 
 @public_bp.route("/impressum")
 def legal_impressum():
-    return render_template("public_legal_impressum.html")
+    # Get event info for countdown banner
+    event_name_setting = Setting.query.filter_by(key="event_name").first()
+    event_date_setting = Setting.query.filter_by(key="event_date").first()
+    
+    # Calculate days until event for countdown
+    days_until_event = None
+    event_date_formatted = None
+    if event_date_setting and event_date_setting.value:
+        try:
+            event_date = datetime.strptime(event_date_setting.value, "%Y-%m-%d").date()
+            today = datetime.now().date()
+            days_until_event = (event_date - today).days
+            event_date_formatted = event_date.strftime("%d.%m.%Y")
+        except (ValueError, TypeError):
+            pass
+            
+    return render_template(
+        "public_legal_impressum.html",
+        event_name=event_name_setting.value if event_name_setting else "",
+        days_until_event=days_until_event,
+        event_date=event_date_formatted
+    )
 
 @public_bp.route("/datenschutz")
 def legal_datenschutz():
-    return render_template("public_legal_privacy.html")
+    # Get event info for countdown banner
+    event_name_setting = Setting.query.filter_by(key="event_name").first()
+    event_date_setting = Setting.query.filter_by(key="event_date").first()
+    
+    # Calculate days until event for countdown
+    days_until_event = None
+    event_date_formatted = None
+    if event_date_setting and event_date_setting.value:
+        try:
+            event_date = datetime.strptime(event_date_setting.value, "%Y-%m-%d").date()
+            today = datetime.now().date()
+            days_until_event = (event_date - today).days
+            event_date_formatted = event_date.strftime("%d.%m.%Y")
+        except (ValueError, TypeError):
+            pass
+            
+    return render_template(
+        "public_legal_privacy.html",
+        event_name=event_name_setting.value if event_name_setting else "",
+        days_until_event=days_until_event,
+        event_date=event_date_formatted
+    )

@@ -5,7 +5,26 @@
 {% endblock %}
 
 {% block content %}
-<main class="max-w-xl mx-auto mt-12 bg-white shadow-lg rounded-xl p-8">
+<!-- Event Countdown -->
+{% if days_until_event is not none and event_name %}
+  <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4 rounded-lg shadow mb-8 text-center">
+    {% if event_name %}
+        <p class="text-xl font-extrabold mt-2 text-red-300">{{ event_name }}</p>
+    {% endif %}
+    {% if vereins_name %}
+        <p class="text-xl font-extrabold mt-2 text-red-300">{{ vereins_name }}</p>
+    {% endif %}
+    {% if days_until_event > 0 %}
+      <p class="text-3xl font-extrabold mt-2">Noch {{ days_until_event }} {{ 'Tage' if days_until_event != 1 else 'Tag' }} bis zum Event!</p>
+    {% elif days_until_event == 0 %}
+      <p class="text-3xl font-extrabold mt-2">🎊 Das Event findet heute statt! 🎊</p>
+    {% else %}
+      <p class="text-xl mt-2">Das Event hat am {{ event_date }} stattgefunden.</p>
+    {% endif %}
+  </div>
+{% endif %}
+
+<main class="max-w-xl mx-auto bg-white shadow-lg rounded-xl p-8">
     {% block guest_content %}{% endblock %}
 </main>
 {% endblock %}

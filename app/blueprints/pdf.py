@@ -92,7 +92,7 @@ def serve_pdf(filename):
     # Get the base filename
     base_filename = os.path.basename(filename)
     
-    # Simply serve the file - cleanup will be handled by the cleanup_old_pdf_files function
+    # Simply serve the file with proper headers - cleanup will be handled by the cleanup_old_pdf_files function
     return send_from_directory(PDF_DIR, base_filename, as_attachment=True)
 
 @pdf_bp.route("/generate/<token>", methods=["GET"])
@@ -125,7 +125,11 @@ def generate_pdf(token):
     # Get only the filename from the path
     filename = os.path.basename(pdf_path)
     
-    flash(f"PDF für {invite.verein} wurde erstellt.", "success")
+    # Only show flash messages to admin users
+    if request.referrer and '/admin/' in request.referrer:
+        flash(f"PDF für {invite.verein} wurde erstellt.", "success")
+    
+    # Serve the file directly
     return redirect(url_for('pdf.serve_pdf', filename=filename))
 
 @pdf_bp.route("/generate-selected-pdfs", methods=["POST"])
@@ -158,6 +162,8 @@ def generate_selected_pdfs():
         invites = Invite.query.order_by(Invite.verein).all()
         pdf_path = generate_all_invitations_pdf(invites, settings)
         filename = os.path.basename(pdf_path)
+        
+        # Show flash message and start download
         flash(f"{len(invites)} Einladungen wurden in einer PDF-Datei zusammengefasst.", "success")
         return redirect(url_for('pdf.serve_pdf', filename=filename))
     else:
@@ -175,12 +181,16 @@ def generate_selected_pdfs():
         if len(invites) == 1:
             pdf_path = generate_invitation_pdf(invites[0], settings)
             filename = os.path.basename(pdf_path)
+            
+            # Show flash message and start download
             flash(f"PDF für {invites[0].verein} wurde erstellt.", "success")
             return redirect(url_for('pdf.serve_pdf', filename=filename))
         # Ansonsten generiere eine PDF mit allen ausgewählten Einladungen
         else:
             pdf_path = generate_all_invitations_pdf(invites, settings)
             filename = os.path.basename(pdf_path)
+            
+            # Show flash message and start download
             flash(f"{len(invites)} ausgewählte Einladungen wurden in einer PDF-Datei zusammengefasst.", "success")
             return redirect(url_for('pdf.serve_pdf', filename=filename))
     
@@ -215,6 +225,9 @@ def generate_all_pdfs():
     pdf_path = generate_all_invitations_pdf(invites, settings)
     filename = os.path.basename(pdf_path)
     
-    flash(f"{len(invites)} Einladungen wurden in einer PDF-Datei zusammengefasst.", "success")
+    # Only show flash messages for admin users
+    if request.referrer and '/admin/' in request.referrer:
+        flash(f"{len(invites)} Einladungen wurden in einer PDF-Datei zusammengefasst.", "success")
+        
     return redirect(url_for('pdf.serve_pdf', filename=filename))
 

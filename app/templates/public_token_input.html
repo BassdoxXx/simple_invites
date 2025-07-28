@@ -2,25 +2,21 @@
 
 {% block title %}Token eingeben{% endblock %}
 
-{% block content %}
-<div class="flex items-center justify-center bg-gray-100 pt-6 pb-4 min-h-[70vh]">
-  <div class="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-md border-4 border-blue-200">
-    {% if vereins_name %}
-      <h2 class="text-3xl font-extrabold text-red-600 text-center mb-2 drop-shadow">{{ vereins_name }}</h2>
-    {% endif %}
-    {% if event_name %}
-      <h3 class="text-xl font-semibold text-blue-700 text-center mb-6">{{ event_name }}</h3>
-    {% endif %}
-    <div class="flex justify-center mb-4">
-      <span class="inline-block bg-blue-600 text-white rounded-full px-4 py-2 text-lg font-bold shadow-lg animate-bounce">🎉 Einladung</span>
-    </div>
-    <p class="mb-6 text-gray-700 text-center text-lg">
-      Bitte gib deinen <span class="font-semibold text-blue-600">Einladungscode</span> ein, um deine persönliche Einladung zu öffnen.
-    </p>
-    <form method="POST" action="{{ url_for('public.find_token') }}" class="space-y-4">
-      <input type="text" name="token" placeholder="Einladungscode eingeben..." required class="w-full p-3 border-2 border-red-300 rounded-xl text-center focus:outline-none focus:border-blue-500 transition">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    </form>
-  </div>
+{% block guest_content %}
+{% if vereins_name %}
+  <h2 class="text-3xl font-extrabold text-red-600 text-center mb-2 drop-shadow">{{ vereins_name }}</h2>
+{% endif %}
+{% if event_name %}
+  <h3 class="text-xl font-semibold text-blue-700 text-center mb-6">{{ event_name }}</h3>
+{% endif %}
+<div class="flex justify-center mb-4">
+  <span class="inline-block bg-blue-600 text-white rounded-full px-4 py-2 text-lg font-bold shadow-lg animate-bounce">🎉 Einladung</span>
 </div>
+<p class="mb-6 text-gray-700 text-center text-lg">
+  Bitte gib deinen <span class="font-semibold text-blue-600">Einladungscode</span> ein, um deine persönliche Einladung zu öffnen.
+</p>
+<form method="POST" action="{{ url_for('public.find_token') }}" class="space-y-4">
+  <input type="text" name="token" placeholder="Einladungscode eingeben..." required class="w-full p-3 border-2 border-red-300 rounded-xl text-center focus:outline-none focus:border-blue-500 transition">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+</form>
 {% endblock %}

@@ -1,9 +1,8 @@
-{% extends "layout_base.html" %}
+{% extends "layout_guest.html" %}
 
 {% block title %}Impressum{% endblock %}
 
-{% block content %}
-<div class="max-w-2xl mx-auto bg-white shadow-md rounded-lg p-6 mt-8">
+{% block guest_content %}
   <h1 class="text-3xl font-bold mb-4">Impressum</h1>
   <p class="text-gray-700">
     Dies ist eine Beispielseite für das Impressum. Die Inhalte müssen noch ergänzt werden.
@@ -16,5 +15,4 @@
   <div class="mt-6">
     <a href="{{ url_for('admin.index') }}" class="text-blue-600 hover:underline">&larr; Zurück zur Startseite</a>
   </div>
-</div>
 {% endblock %}
