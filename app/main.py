@@ -11,8 +11,6 @@ app = create_app()
 migrate = Migrate(app, db)
 
 with app.app_context():
-    db.create_all()  # Erstellt alle Tabellen, falls sie nicht existieren
-    
     # Apply database fixes if enabled
     if app.config.get('DB_AUTO_FIX', True):
         try:
@@ -23,10 +21,6 @@ with app.app_context():
     
     # Überprüfe die Hostnamen-Konfiguration
     check_hostname_config()
-
-@app.errorhandler(404)
-def page_not_found(e):
-    return render_template("error_404.html"), 404
 
 # Background thread for periodic PDF cleanup
 def periodic_pdf_cleanup():
