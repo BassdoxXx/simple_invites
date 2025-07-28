@@ -203,9 +203,7 @@ def process_csv_import(content, dialect, has_header, base_url):
         db.session.add(new_invite)
         db.session.flush()  # Um die ID zu erhalten
         
-        # QR-Code generieren und Pfad in der Datenbank speichern
-        generate_qr(invite_url, verein, token, new_invite.id)
-        
+        # We no longer generate QR codes here - they will be generated on-demand when creating PDFs
         imported_count += 1
     
     db.session.commit()

@@ -70,8 +70,9 @@ def generate_qr(url, path, token, invite_id=None):
     
     rel_path = f"qrcodes/{filename}"
     
-    # Wenn eine invite_id angegeben wurde, speichere den QR-Code-Pfad in der Datenbank
-    if invite_id is not None:
+    # We no longer save QR code paths in the database by default
+    # Only if explicitly requested with invite_id and save_to_db=True
+    if invite_id is not None and os.environ.get('SAVE_QR_TO_DB', '').lower() == 'true':
         invite = Invite.query.get(invite_id)
         if invite:
             invite.qr_code_path = rel_path

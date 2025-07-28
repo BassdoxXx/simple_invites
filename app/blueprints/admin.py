@@ -203,11 +203,7 @@ def create_invite():
             db.session.add(new_invite)
             db.session.commit()
             
-            # Generate QR code automatically after commit (to get the ID)
-            if new_invite.id:
-                from app.utils.qr_utils import generate_qr
-                qr_path = generate_qr(invite_url, verein, token, new_invite.id)
-            
+            # We don't generate QR codes here anymore - they will be generated on-demand when creating PDFs
             flash(f"Neue Einladung für {verein} wurde erstellt.", "success")
         
         return redirect(url_for("admin.index"))

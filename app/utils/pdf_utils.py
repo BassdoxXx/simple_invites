@@ -190,6 +190,7 @@ class InvitationPDF(FPDF):
 def generate_invitation_pdf(invite, settings):
     """
     Generiert ein PDF für eine Einladung basierend auf einem Layout-Template.
+    Erzeugt dafür temporär einen QR-Code, der nach der PDF-Erstellung wieder gelöscht wird.
     
     Args:
         invite: Das Einladungs-Objekt aus der Datenbank
@@ -336,9 +337,17 @@ def generate_invitation_pdf(invite, settings):
     pdf.cell(0, 6, 'Anmeldung:', 0, 1, 'L')
     pdf.ln(2)
     
-    # QR-Code für die Anmeldung - exakt unter dem "A" von "Anmeldung"
-    if invite.qr_code_path and os.path.exists(os.path.join(BASE_DIR, 'app', 'static', invite.qr_code_path)):
-        qr_path = os.path.join(BASE_DIR, 'app', 'static', invite.qr_code_path)
+    # QR-Code für die Anmeldung on-demand generieren
+    from app.utils.qr_utils import generate_qr
+    base_url = get_base_url()
+    invite_url = f"{base_url}/respond/{invite.token}"
+    
+    # Generiere den QR-Code temporär
+    logger.debug(f"Generating temporary QR code for PDF with URL: {invite_url}")
+    temp_qr_path = generate_qr(invite_url, invite.verein, invite.token)
+    
+    if temp_qr_path and os.path.exists(os.path.join(BASE_DIR, 'app', 'static', temp_qr_path)):
+        qr_path = os.path.join(BASE_DIR, 'app', 'static', temp_qr_path)
         qr_size = 45  # QR-Code-Größe erhöht für bessere Lesbarkeit
         # Direkt unter dem "A" von Anmeldung positionieren - noch weiter nach links verschoben
         pdf.image(qr_path, x=21, y=pdf.get_y(), w=qr_size, h=qr_size)
@@ -347,26 +356,31 @@ def generate_invitation_pdf(invite, settings):
         pdf.set_font('Arial', '', 11)
         page_width = pdf.w - pdf.l_margin - pdf.r_margin
         pdf.set_xy(21 + qr_size + 5, pdf.get_y() + 5)
-        # Konsistent die gleiche URL verwenden wie für QR-Codes
-        base_url = get_base_url()
         logger.debug(f"Using base URL for PDF generation: {base_url}")
         pdf.multi_cell(page_width - qr_size - 5, 6, 
                       f"QR-Code scannen oder unter:\n{base_url}/respond/{invite.token}", 0, 'L')
     else:
         # Fallback ohne QR-Code
         pdf.set_font('Arial', '', 11)
-        # Konsistent die gleiche URL verwenden wie für QR-Codes
-        base_url = get_base_url()
         logger.debug(f"Using base URL for PDF generation (fallback): {base_url}")
         pdf.multi_cell(0, 6, f"Anmeldung unter: {base_url}/respond/{invite.token}", 0, 'L')
+        qr_size = 0
     
     # Abstand nach dem QR-Code und Text
-    pdf.ln(qr_size + 2 if invite.qr_code_path and os.path.exists(os.path.join(BASE_DIR, 'app', 'static', invite.qr_code_path)) else 10)
+    pdf.ln(qr_size + 2 if qr_size > 0 else 10)
     
     # PDF speichern
     filename = f"Einladung_{invite.verein}_{invite.token}.pdf"
     filepath = os.path.join(PDF_DIR, filename)
     pdf.output(filepath)
+    
+    # Temporären QR-Code löschen, wenn er existiert
+    if temp_qr_path and os.path.exists(os.path.join(BASE_DIR, 'app', 'static', temp_qr_path)):
+        try:
+            os.remove(os.path.join(BASE_DIR, 'app', 'static', temp_qr_path))
+            logger.debug(f"Deleted temporary QR code: {temp_qr_path}")
+        except Exception as e:
+            logger.error(f"Error deleting temporary QR code: {e}")
     
     return f"pdfs/{filename}"
 
@@ -523,9 +537,22 @@ def generate_all_invitations_pdf(invites, settings):
         pdf.cell(0, 6, 'Anmeldung:', 0, 1, 'L')
         pdf.ln(2)
         
-        # QR-Code für die Anmeldung - exakt unter dem "A" von "Anmeldung"
-        if invite.qr_code_path and os.path.exists(os.path.join(BASE_DIR, 'app', 'static', invite.qr_code_path)):
-            qr_path = os.path.join(BASE_DIR, 'app', 'static', invite.qr_code_path)
+        # QR-Code für die Anmeldung on-demand generieren
+        from app.utils.qr_utils import generate_qr
+        base_url = get_base_url()
+        invite_url = f"{base_url}/respond/{invite.token}"
+        
+        # Generiere den QR-Code temporär
+        logger.debug(f"Generating temporary QR code for bulk PDF with URL: {invite_url}")
+        temp_qr_path = generate_qr(invite_url, invite.verein, invite.token)
+        
+        # Track temporary QR files to delete them later
+        if not hasattr(pdf, 'temp_qr_paths'):
+            pdf.temp_qr_paths = []
+        pdf.temp_qr_paths.append(temp_qr_path)
+        
+        if temp_qr_path and os.path.exists(os.path.join(BASE_DIR, 'app', 'static', temp_qr_path)):
+            qr_path = os.path.join(BASE_DIR, 'app', 'static', temp_qr_path)
             qr_size = 45  # QR-Code-Größe erhöht für bessere Lesbarkeit
             # Direkt unter dem "A" von Anmeldung positionieren - noch weiter nach links verschoben
             pdf.image(qr_path, x=21, y=pdf.get_y(), w=qr_size, h=qr_size)
@@ -534,27 +561,33 @@ def generate_all_invitations_pdf(invites, settings):
             pdf.set_font('Arial', '', 11)
             page_width = pdf.w - pdf.l_margin - pdf.r_margin
             pdf.set_xy(21 + qr_size + 5, pdf.get_y() + 5)
-            # Konsistent die gleiche URL verwenden wie für QR-Codes
-            base_url = get_base_url()
             logger.debug(f"Using base URL for bulk PDF generation: {base_url}")
             pdf.multi_cell(page_width - qr_size - 5, 6, 
-                          f"QR-Code scannen oder unter:\n{base_url}/respond/{invite.token}", 0, 'L')
+                        f"QR-Code scannen oder unter:\n{base_url}/respond/{invite.token}", 0, 'L')
         else:
             # Fallback ohne QR-Code
             pdf.set_font('Arial', '', 11)
-            # Konsistent die gleiche URL verwenden wie für QR-Codes
-            base_url = get_base_url()
             logger.debug(f"Using base URL for bulk PDF generation (fallback): {base_url}")
             pdf.multi_cell(0, 6, f"Anmeldung unter: {base_url}/respond/{invite.token}", 0, 'L')
+            qr_size = 0
         
         # Abstand nach dem QR-Code und Text
-        qr_size = 45  # Konsistente QR-Code-Größe erhöht für bessere Lesbarkeit
-        pdf.ln(qr_size + 2 if invite.qr_code_path and os.path.exists(os.path.join(BASE_DIR, 'app', 'static', invite.qr_code_path)) else 10)
+        pdf.ln(qr_size + 2 if qr_size > 0 else 10)
     
     # PDF speichern
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"Alle_Einladungen_{timestamp}.pdf"
     filepath = os.path.join(PDF_DIR, filename)
     pdf.output(filepath)
+    
+    # Alle temporären QR-Codes löschen
+    if hasattr(pdf, 'temp_qr_paths'):
+        for temp_path in pdf.temp_qr_paths:
+            if temp_path and os.path.exists(os.path.join(BASE_DIR, 'app', 'static', temp_path)):
+                try:
+                    os.remove(os.path.join(BASE_DIR, 'app', 'static', temp_path))
+                    logger.debug(f"Deleted temporary QR code: {temp_path}")
+                except Exception as e:
+                    logger.error(f"Error deleting temporary QR code: {e}")
     
     return f"pdfs/{filename}"
