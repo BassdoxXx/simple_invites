@@ -2,12 +2,18 @@ import os
 import qrcode
 import re
 from app.models import db, Invite
+from app.utils.settings_utils import get_base_url
+import logging
+
+# Logger setup
+logger = logging.getLogger(__name__)
 
 # Basispfad des Projekts bestimmen
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 QR_DIR = os.path.join(BASE_DIR, 'app', 'static', 'qrcodes')
 
 # In Docker-Umgebung sicherstellen, dass der Ordner existiert
+logger.debug(f"QR code directory: {QR_DIR}")
 os.makedirs(QR_DIR, exist_ok=True)
 
 def generate_qr(url, path, token, invite_id=None):
@@ -25,6 +31,20 @@ def generate_qr(url, path, token, invite_id=None):
     Returns:
         str: Relativer Pfad zur gespeicherten QR-Code-Datei für Flask (z.B. 'qrcodes/Verein_token.png').
     """
+    # Log the URL for debugging
+    logger.debug(f"Generating QR code with URL: {url}")
+    
+    # Make sure we're using the correct base URL from the environment
+    base_url = get_base_url()
+    # If the URL doesn't start with the correct base URL, rebuild it
+    if not url.startswith(base_url) and "/respond/" in url:
+        # Extract token from old URL
+        parts = url.split("/respond/")
+        if len(parts) > 1:
+            token_part = parts[1]
+            url = f"{base_url}/respond/{token_part}"
+            logger.warning(f"URL did not match base URL, rebuilt to: {url}")
+    
     # Vereinsname und Token für Dateinamen aufbereiten
     safe_verein = re.sub(r'\s+', '_', path.strip())
     safe_token = token.strip()
@@ -32,6 +52,7 @@ def generate_qr(url, path, token, invite_id=None):
 
     os.makedirs(QR_DIR, exist_ok=True)
     full_path = os.path.join(QR_DIR, filename)
+    logger.debug(f"QR code will be saved to: {full_path}")
     
     # QR-Code mit höherer Auflösung und Fehlerkorrektur erstellen
     qr = qrcode.QRCode(
@@ -45,6 +66,7 @@ def generate_qr(url, path, token, invite_id=None):
     
     img = qr.make_image(fill_color="black", back_color="white")
     img.save(full_path)
+    logger.info(f"QR code generated successfully with URL: {url}")
     
     rel_path = f"qrcodes/{filename}"
     

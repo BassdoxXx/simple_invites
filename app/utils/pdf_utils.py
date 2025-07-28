@@ -8,6 +8,11 @@ import time
 from fpdf import FPDF
 from datetime import datetime, timedelta
 from flask import current_app
+from app.utils.settings_utils import get_base_url
+
+# Logger setup
+import logging
+logger = logging.getLogger(__name__)
 
 # Base directory of project
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -17,7 +22,10 @@ LOGO_PATH = os.path.join(BASE_DIR, 'app', 'static', 'images', 'logo.png')
 # Stellen Sie sicher, dass das Verzeichnis existiert - wichtig für Docker-Container
 os.makedirs(PDF_DIR, exist_ok=True)
 if not os.path.exists(LOGO_PATH):
-    print(f"WARNUNG: Logo nicht gefunden unter {LOGO_PATH}")
+    logger.warning(f"Logo nicht gefunden unter {LOGO_PATH}")
+    # Log auch Pfade für Debug-Zwecke
+    logger.debug(f"BASE_DIR: {BASE_DIR}")
+    logger.debug(f"PDF_DIR: {PDF_DIR}")
 
 def cleanup_old_pdf_files(max_age_minutes=15):
     """
@@ -65,9 +73,10 @@ def cleanup_old_pdf_files(max_age_minutes=15):
                         try:
                             current_app.logger.error(f"Error deleting PDF file {pdf_file}: {e}")
                         except:
-                            print(f"Error deleting PDF file {pdf_file}: {e}")
-            except Exception:
+                            logger.error(f"Error deleting PDF file {pdf_file}: {e}")
+            except Exception as e:
                 # Fehler beim Lesen der Datei-Metadaten überspringen
+                logger.warning(f"Error reading file metadata for {pdf_file}: {e}")
                 continue
                 
         # Logge nur, wenn tatsächlich Dateien gelöscht wurden
@@ -75,20 +84,20 @@ def cleanup_old_pdf_files(max_age_minutes=15):
             try:
                 current_app.logger.info(f"PDF cleanup: deleted {deleted_count} files older than {max_age_minutes} minutes")
             except:
-                print(f"PDF cleanup: deleted {deleted_count} files older than {max_age_minutes} minutes")
+                logger.info(f"PDF cleanup: deleted {deleted_count} files older than {max_age_minutes} minutes")
                 
         # Logge Fehler nur, wenn welche aufgetreten sind
         if error_count > 0:
             try:
                 current_app.logger.warning(f"PDF cleanup: encountered {error_count} errors while trying to delete files")
             except:
-                print(f"PDF cleanup: encountered {error_count} errors while trying to delete files")
+                logger.warning(f"PDF cleanup: encountered {error_count} errors while trying to delete files")
                 
     except Exception as e:
         try:
             current_app.logger.error(f"Error during PDF cleanup: {e}")
         except:
-            print(f"Error during PDF cleanup: {e}")
+            logger.error(f"Error during PDF cleanup: {e}")
 
 class InvitationPDF(FPDF):
     """Custom PDF class for invitation generation strictly according to DIN 5008"""
@@ -133,9 +142,10 @@ class InvitationPDF(FPDF):
                 logo_width = 55
                 # Position logo in top right area
                 self.image(LOGO_PATH, x=page_width-70, y=0, w=logo_width)
+                logger.debug(f"Logo successfully added from {LOGO_PATH}")
         except Exception as e:
             # Log the error but continue without the logo
-            print(f"Could not add logo: {e}")
+            logger.error(f"Could not add logo: {e}")
             
         # Add folding marks according to DIN 5008
         self.add_folding_marks()
@@ -337,15 +347,17 @@ def generate_invitation_pdf(invite, settings):
         pdf.set_font('Arial', '', 11)
         page_width = pdf.w - pdf.l_margin - pdf.r_margin
         pdf.set_xy(21 + qr_size + 5, pdf.get_y() + 5)
-        # Get base URL from settings if available, otherwise from environment variables or fallback
-        base_url = settings.get("base_url") or os.environ.get('BASE_URL') or "http://localhost:5000"
+        # Konsistent die gleiche URL verwenden wie für QR-Codes
+        base_url = get_base_url()
+        logger.debug(f"Using base URL for PDF generation: {base_url}")
         pdf.multi_cell(page_width - qr_size - 5, 6, 
                       f"QR-Code scannen oder unter:\n{base_url}/respond/{invite.token}", 0, 'L')
     else:
         # Fallback ohne QR-Code
         pdf.set_font('Arial', '', 11)
-        # Get base URL from settings if available, otherwise from environment variables or fallback
-        base_url = settings.get("base_url") or os.environ.get('BASE_URL') or "http://localhost:5000"
+        # Konsistent die gleiche URL verwenden wie für QR-Codes
+        base_url = get_base_url()
+        logger.debug(f"Using base URL for PDF generation (fallback): {base_url}")
         pdf.multi_cell(0, 6, f"Anmeldung unter: {base_url}/respond/{invite.token}", 0, 'L')
     
     # Abstand nach dem QR-Code und Text
@@ -522,16 +534,18 @@ def generate_all_invitations_pdf(invites, settings):
             pdf.set_font('Arial', '', 11)
             page_width = pdf.w - pdf.l_margin - pdf.r_margin
             pdf.set_xy(21 + qr_size + 5, pdf.get_y() + 5)
-            # Get base URL from settings if available, otherwise from environment variables or fallback
-            base_url = settings.get("base_url") or os.environ.get('BASE_URL') or "http://localhost:5000"
+            # Konsistent die gleiche URL verwenden wie für QR-Codes
+            base_url = get_base_url()
+            logger.debug(f"Using base URL for bulk PDF generation: {base_url}")
             pdf.multi_cell(page_width - qr_size - 5, 6, 
-                          f"QR-Code scannen oder unter:\n{base_url}/respond?token={invite.token}", 0, 'L')
+                          f"QR-Code scannen oder unter:\n{base_url}/respond/{invite.token}", 0, 'L')
         else:
             # Fallback ohne QR-Code
             pdf.set_font('Arial', '', 11)
-            # Get base URL from settings if available, otherwise from environment variables or fallback
-            base_url = settings.get("base_url") or os.environ.get('BASE_URL') or "http://localhost:5000"
-            pdf.multi_cell(0, 6, f"Anmeldung unter: {base_url}/respond?token={invite.token}", 0, 'L')
+            # Konsistent die gleiche URL verwenden wie für QR-Codes
+            base_url = get_base_url()
+            logger.debug(f"Using base URL for bulk PDF generation (fallback): {base_url}")
+            pdf.multi_cell(0, 6, f"Anmeldung unter: {base_url}/respond/{invite.token}", 0, 'L')
         
         # Abstand nach dem QR-Code und Text
         qr_size = 45  # Konsistente QR-Code-Größe erhöht für bessere Lesbarkeit

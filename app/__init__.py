@@ -10,14 +10,33 @@ from app.blueprints.public import public_bp
 from app.blueprints.pdf import pdf_bp
 import os
 import secrets
+import logging
+import sys
 
 def create_app(testing=False):
     import os
+    
+    # Konfiguriere Logging für besseres Debugging
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+        handlers=[
+            logging.StreamHandler(sys.stdout)
+        ]
+    )
+    logger = logging.getLogger(__name__)
+    
+    # Zeige die Umgebungsvariablen an (ohne SECRET_KEY)
+    env_vars = {k: v for k, v in os.environ.items() if k != 'SECRET_KEY'}
+    logger.debug(f"Environment variables: {env_vars}")
+    
     static_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), 'static'))
+    logger.info(f"Static folder configured as: {static_folder}")
     app = Flask(__name__, static_folder=static_folder)
     
     # Datenbank im Projektverzeichnis speichern
     data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'instance'))
+    logger.info(f"Data directory: {data_dir}")
     os.makedirs(data_dir, exist_ok=True)
         
     db_path = os.path.join(data_dir, "simple_invites.db")

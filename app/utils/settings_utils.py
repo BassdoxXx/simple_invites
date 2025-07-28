@@ -78,21 +78,31 @@ def check_hostname_config():
     Diese Funktion wird beim Startup aufgerufen, um Konfigurationsprobleme
     frühzeitig zu erkennen.
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
     base_url = get_base_url()
     app_hostname = os.environ.get("APP_HOSTNAME")
     
+    logger.info("="*60)
+    logger.info("🌐 HOSTNAME CONFIGURATION")
+    logger.info("="*60)
+    
+    if app_hostname:
+        logger.info(f"✅ APP_HOSTNAME environment variable is set to: {app_hostname}")
+        logger.info(f"✅ All links will be generated using: {base_url}")
+    else:
+        logger.warning("⚠️  WARNING: APP_HOSTNAME environment variable is NOT set!")
+        logger.warning(f"⚠️  Using fallback from database: {base_url}")
+        logger.warning("⚠️  This may cause incorrect URLs in production!")
+        logger.info("\n📝 Set APP_HOSTNAME in your environment or docker-compose.yml:")
+        logger.info("   Example: APP_HOSTNAME=https://invites.ffw-windischletten.de")
+    
+    logger.info("="*60)
+    
+    # Force log to stdout/stderr for Docker visibility
     print("\n" + "="*60)
     print("🌐 HOSTNAME CONFIGURATION")
     print("="*60)
-    
-    if app_hostname:
-        print(f"✅ APP_HOSTNAME environment variable is set to: {app_hostname}")
-        print(f"✅ All links will be generated using: {base_url}")
-    else:
-        print("⚠️  WARNING: APP_HOSTNAME environment variable is NOT set!")
-        print(f"⚠️  Using fallback from database: {base_url}")
-        print("⚠️  This may cause incorrect URLs in production!")
-        print("\n📝 Set APP_HOSTNAME in your environment or docker-compose.yml:")
-        print("   Example: APP_HOSTNAME=https://invites.ffw-windischletten.de")
-    
+    print(f"Base URL for all links: {base_url}")
     print("="*60)

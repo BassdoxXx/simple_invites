@@ -27,5 +27,19 @@ ENV FLASK_ENV=production
 # Der Wert dieser Variable sollte beim Build oder Run überschrieben werden
 ENV APP_HOSTNAME=http://localhost:5000
 
+# Script für den Container-Start
+COPY <<EOF /app/docker-entrypoint.sh
+#!/bin/bash
+set -e
+
+# Führe die Umgebungsprüfung aus
+python3 /app/check_environment.py
+
 # Starte die Anwendung
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app.main:app"]
+exec gunicorn --bind 0.0.0.0:5000 app.main:app
+EOF
+
+RUN chmod +x /app/docker-entrypoint.sh
+
+# Starte die Anwendung mit dem Entrypoint-Script
+CMD ["/app/docker-entrypoint.sh"]
