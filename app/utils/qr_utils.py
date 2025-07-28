@@ -7,6 +7,9 @@ from app.models import db, Invite
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 QR_DIR = os.path.join(BASE_DIR, 'app', 'static', 'qrcodes')
 
+# In Docker-Umgebung sicherstellen, dass der Ordner existiert
+os.makedirs(QR_DIR, exist_ok=True)
+
 def generate_qr(url, path, token, invite_id=None):
     """
     Erzeugt einen QR-Code für den gegebenen Link und speichert ihn im static/qrcodes-Ordner.

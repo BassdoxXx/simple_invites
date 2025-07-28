@@ -5,8 +5,10 @@ services:
       - "5000:5000"
     volumes:
       - ./app/static:/app/app/static
-      - ./data/simple_invites:/data/simple_invites
+      - ./data/simple_invites:/app/data/simple_invites
+      - ./instance:/app/instance
     environment:
       - FLASK_ENV=production
       - SECRET_KEY=dein_geheimer_schluessel
       - PDF_CLEANUP_MINUTES=30
+      - APP_HOSTNAME=https://your-production-domain.com  # Ändere dies zu deiner tatsächlichen Produktions-URL

@@ -14,8 +14,10 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 PDF_DIR = os.path.join(BASE_DIR, 'app', 'static', 'pdfs')
 LOGO_PATH = os.path.join(BASE_DIR, 'app', 'static', 'images', 'logo.png')
 
-# Stellen Sie sicher, dass das Verzeichnis existiert
+# Stellen Sie sicher, dass das Verzeichnis existiert - wichtig für Docker-Container
 os.makedirs(PDF_DIR, exist_ok=True)
+if not os.path.exists(LOGO_PATH):
+    print(f"WARNUNG: Logo nicht gefunden unter {LOGO_PATH}")
 
 def cleanup_old_pdf_files(max_age_minutes=15):
     """
