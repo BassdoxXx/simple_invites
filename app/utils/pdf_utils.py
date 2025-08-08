@@ -164,9 +164,9 @@ class InvitationPDF(FPDF):
                 settings = {}
         
         # Get values from settings with fallbacks
-        vereins_name = settings.get('vereins_name', "Freiwillige Feuerwehr Windischletten e.V.")
-        contact_email = settings.get('contact_email', "info@ffw-windischletten.de")
-        website = settings.get('website', "www.ffw-windischletten.de")
+        vereins_name = settings.get('vereins_name', "Freiwillige Feuerwehr ")
+        contact_email = settings.get('contact_email', "info@feuerwehren.bayern")
+        website = settings.get('website', "www.feuerwehren.bayern")
         
         # Brieffuß - gemäß DIN 5008 mit gesetzlich vorgeschriebenen Informationen
         self.set_y(-25)  # 25mm from bottom
@@ -308,13 +308,13 @@ def generate_invitation_pdf(invite, settings):
                 pdf.ln(6)  # Leerzeile zwischen Absätzen
     else:
         # Fallback, falls kein Text in den Einstellungen hinterlegt ist - mit korrekten Leerzeilen
-        pdf.multi_cell(0, 6, f"Anlässlich unseres Festes laden wir Sie herzlich nach {event_location or 'unseren Ort'} ein!", 0, 'L')
+        pdf.multi_cell(0, 6, f"Anlässlich unseres Festes laden wir herzlich nach {event_location or 'unseren Ort'} ein!", 0, 'L')
         pdf.ln(6)  # Leerzeile nach DIN 5008
         
         pdf.multi_cell(0, 6, f"Festumzug: {formatted_date or 'TBD'}, Aufstellung 13:00 Uhr, Start 13:30 Uhr.", 0, 'L')
         pdf.ln(6)  # Leerzeile nach DIN 5008
         
-        pdf.multi_cell(0, 6, f"{vereins_name or 'Wir'} freuen uns auf Ihr Kommen!", 0, 'L')
+        pdf.multi_cell(0, 6, f"{vereins_name or 'Wir'} freuen uns auf Euer Kommen!", 0, 'L')
     
     # Abstand vor dem Anmeldebereich - gemäß DIN 5008 durch Absatzformatierung
     pdf.ln(10)
@@ -466,7 +466,6 @@ def generate_all_invitations_pdf(invites, settings):
         info_x = pdf.w - 80  # Startposition für Infoblock
         info_y = 50  # Gleiche Höhe wie das Anschriftenfeld
         
-        # Nur Datum im Infoblock (Ihr/Unser Zeichen entfernt)
         pdf.set_xy(info_x, info_y)
         pdf.set_font('Arial', '', 10)
         pdf.cell(25, 5, "Datum:", 0, 0)
@@ -508,13 +507,13 @@ def generate_all_invitations_pdf(invites, settings):
                     pdf.ln(6)  # Leerzeile zwischen Absätzen
         else:
             # Fallback, falls kein Text in den Einstellungen hinterlegt ist - mit korrekten Leerzeilen
-            pdf.multi_cell(0, 6, f"Anlässlich unseres Festes laden wir euch herzlich nach {event_location or 'unseren Ort'} ein!", 0, 'L')
+            pdf.multi_cell(0, 6, f"Anlässlich unseres Festes laden wir herzlich nach {event_location or 'unseren Ort'} ein!", 0, 'L')
             pdf.ln(6)  # Leerzeile nach DIN 5008
             
             pdf.multi_cell(0, 6, f"Festumzug: {formatted_date or 'TBD'}, Aufstellung 13:00 Uhr, Start 13:30 Uhr.", 0, 'L')
             pdf.ln(6)  # Leerzeile nach DIN 5008
             
-            pdf.multi_cell(0, 6, f"{vereins_name or 'Wir'} freuen uns auf Ihr Kommen!", 0, 'L')
+            pdf.multi_cell(0, 6, f"{vereins_name or 'Wir'} freuen uns auf Euer Kommen!", 0, 'L')
         
         # Abstand vor dem Anmeldebereich - gemäß DIN 5008 durch Absatzformatierung
         pdf.ln(10)
