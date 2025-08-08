@@ -1,6 +1,7 @@
 body {
     font-family: Arial, sans-serif;
-    padding: 2rem;
+    padding: 0.5rem; /* removed 2rem to use full screen width */
+    margin: 0; /* ensure no default body margin */
     background-color: #f5f5f5;
 }
 
@@ -53,4 +54,17 @@ button:hover {
 .flash.danger {
     background-color: #f8d7da;
     color: #721c24;
+}
+
+/* Mobile: forms should not be constrained or centered by global CSS */
+@media (max-width: 768px) {
+  form {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0; /* let Tailwind classes control inner spacing */
+    background: transparent; /* avoid double card backgrounds */
+  }
 }

@@ -73,12 +73,12 @@
     {% endif %}
   {% endwith %}
 
-  <!-- Ersetze die bestehende main-Zeile mit dieser breiteren Version: -->
-  <main class="flex-grow w-full mx-auto p-4">
+  <!-- Ersetze die bestehende main-Zeile mit einer mobilfreundlichen Version ohne Seitenränder -->
+  <main class="flex-grow w-full p-0 md:p-4">
     {% block content %}{% endblock %}
   </main>
   <footer class="bg-white border-t mt-8 py-4 text-sm text-center text-gray-600">
-    <div class="max-w-6xl mx-auto px-4 flex justify-center gap-4">
+    <div class="w-full px-0 md:px-4 flex justify-center gap-4 flex-wrap">
       <a href="https://www.ffw-windischletten.de/impressum/" class="hover:underline">Impressum</a>
       <span>|</span>
       <a href="https://www.ffw-windischletten.de/datenschutz/" class="hover:underline">Datenschutz</a>
