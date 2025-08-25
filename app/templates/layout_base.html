@@ -73,6 +73,64 @@
     {% endif %}
   {% endwith %}
 
+  <!-- Cookie Banner -->
+  <div id="cookieBanner" class="fixed bottom-0 left-0 right-0 bg-gray-800 text-white p-4 shadow-lg z-50 transform translate-y-full transition-transform duration-300" style="display: none;">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="text-sm">
+        <p>Diese Website verwendet technisch notwendige Cookies für die Funktionalität. Weitere Informationen finden Sie in unserer 
+          <a href="{{ url_for('public.legal_datenschutz') }}" class="text-blue-300 hover:text-blue-200 underline">Datenschutzerklärung</a>.
+        </p>
+      </div>
+      <div class="flex gap-2 flex-shrink-0">
+        <button onclick="declineCookies()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded text-sm font-medium">
+          Ablehnen
+        </button>
+        <button onclick="acceptCookies()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium">
+          Akzeptieren
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cookie Banner Script -->
+  <script>
+    function showCookieBanner() {
+      const banner = document.getElementById('cookieBanner');
+      const cookieChoice = localStorage.getItem('cookiesAccepted');
+      if (cookieChoice === null) { // Nur anzeigen wenn noch keine Wahl getroffen wurde
+        banner.style.display = 'block';
+        setTimeout(() => {
+          banner.classList.remove('translate-y-full');
+        }, 100);
+      }
+    }
+
+    function acceptCookies() {
+      localStorage.setItem('cookiesAccepted', 'true');
+      hideCookieBanner();
+    }
+
+    function declineCookies() {
+      localStorage.setItem('cookiesAccepted', 'false');
+      hideCookieBanner();
+      // Optional: Hier könntest du Analytics/Marketing-Cookies deaktivieren
+      console.log('Cookies abgelehnt - nur technisch notwendige Cookies werden verwendet');
+    }
+
+    function hideCookieBanner() {
+      const banner = document.getElementById('cookieBanner');
+      banner.classList.add('translate-y-full');
+      setTimeout(() => {
+        banner.style.display = 'none';
+      }, 300);
+    }
+
+    // Show banner after page load
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(showCookieBanner, 1000);
+    });
+  </script>
+
   <!-- Ersetze die bestehende main-Zeile mit einer mobilfreundlichen Version ohne Seitenränder -->
   <main class="flex-grow w-full p-0 md:p-4">
     {% block content %}{% endblock %}
