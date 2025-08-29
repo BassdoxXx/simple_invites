@@ -323,9 +323,9 @@ def generate_invitation_pdf(invite, settings):
     # pdf.multi_cell(0, 6, "Wir freuen uns auf euch und ein unvergessliches Fest!", 0, 'L')
     # pdf.ln(12)  # Platz für Unterschrift
     
-    # Name des Veranstalters/Unterzeichners
-    pdf.multi_cell(0, 6, f"{vereins_name or 'Festkomitee'}", 0, 'L')
-    pdf.ln(12)  # Abstand nach Unterschriftsbereich
+    # # Name des Veranstalters/Unterzeichners
+    # pdf.multi_cell(0, 6, f"{vereins_name or 'Festkomitee'}", 0, 'L')
+    # pdf.ln(12)  # Abstand nach Unterschriftsbereich
     
     # Sichtbare Trennung - dünnere Linie nach DIN 5008
     pdf.set_draw_color(200, 200, 200)  # Hellgrau
@@ -522,9 +522,9 @@ def generate_all_invitations_pdf(invites, settings):
         # pdf.multi_cell(0, 6, "Wir freuen uns auf euch und ein unvergessliches Fest!", 0, 'L')
         # pdf.ln(12)  # Platz für Unterschrift
         
-        # Name des Veranstalters/Unterzeichners
-        pdf.multi_cell(0, 6, f"{vereins_name or 'Festkomitee'}", 0, 'L')
-        pdf.ln(12)  # Abstand nach Unterschriftsbereich
+        # # Name des Veranstalters/Unterzeichners
+        # pdf.multi_cell(0, 6, f"{vereins_name or 'Festkomitee'}", 0, 'L')
+        # pdf.ln(12)  # Abstand nach Unterschriftsbereich
         
         # Sichtbare Trennung - dünnere Linie nach DIN 5008
         pdf.set_draw_color(200, 200, 200)  # Hellgrau
