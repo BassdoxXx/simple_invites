@@ -319,12 +319,12 @@ def generate_invitation_pdf(invite, settings):
     # Abstand vor dem Anmeldebereich - gemäß DIN 5008 durch Absatzformatierung
     pdf.ln(10)
     
-    # Grußformel gemäß DIN 5008
-    pdf.multi_cell(0, 6, "Wir freuen uns auf euch und ein unvergessliches Fest!", 0, 'L')
-    pdf.ln(12)  # Platz für Unterschrift
+    # # Grußformel gemäß DIN 5008
+    # pdf.multi_cell(0, 6, "Wir freuen uns auf euch und ein unvergessliches Fest!", 0, 'L')
+    # pdf.ln(12)  # Platz für Unterschrift
     
     # Name des Veranstalters/Unterzeichners
-    pdf.multi_cell(0, 6, f"Eure {vereins_name or 'Festkomitee'}", 0, 'L')
+    pdf.multi_cell(0, 6, f"{vereins_name or 'Festkomitee'}", 0, 'L')
     pdf.ln(12)  # Abstand nach Unterschriftsbereich
     
     # Sichtbare Trennung - dünnere Linie nach DIN 5008
@@ -518,12 +518,12 @@ def generate_all_invitations_pdf(invites, settings):
         # Abstand vor dem Anmeldebereich - gemäß DIN 5008 durch Absatzformatierung
         pdf.ln(10)
         
-        # Grußformel gemäß DIN 5008
-        pdf.multi_cell(0, 6, "Wir freuen uns auf euch und ein unvergessliches Fest!", 0, 'L')
-        pdf.ln(12)  # Platz für Unterschrift
+        # # Grußformel gemäß DIN 5008
+        # pdf.multi_cell(0, 6, "Wir freuen uns auf euch und ein unvergessliches Fest!", 0, 'L')
+        # pdf.ln(12)  # Platz für Unterschrift
         
         # Name des Veranstalters/Unterzeichners
-        pdf.multi_cell(0, 6, f"Eure {vereins_name or 'Festkomitee'}", 0, 'L')
+        pdf.multi_cell(0, 6, f"{vereins_name or 'Festkomitee'}", 0, 'L')
         pdf.ln(12)  # Abstand nach Unterschriftsbereich
         
         # Sichtbare Trennung - dünnere Linie nach DIN 5008
