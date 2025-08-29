@@ -1,10 +1,14 @@
 {% extends "layout_guest.html" %} 
 {% block title %}Einladung beantworten{% endblock %} 
 
-{% block guest_content %}
-
-
-<!-- Gast-Begrüßung und Formular -->
+{% block guest_content %        <div class="mt-6">
+        <button type="submit" class="w-full bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+          </svg>
+          Antwort speichern
+        </button>
+      </div>!-- Gast-Begrüßung und Formular -->
 {% if gast_name %}
   <h3 class="text-xl font-bold text-gray-800 text-center mb-4">Hallo <span class="text-red-600">{{ gast_name }}</span> 👋</h3>
 {% else %}
@@ -87,16 +91,16 @@
         </div>
       </div>
       
-      <div id="extra-fields" {% if not response or response.attending != 'yes' %}style="display: none;"{% endif %} class="space-y-4 bg-blue-50 p-6 rounded-lg border border-blue-200 mt-6 shadow-inner">
+      <div id="extra-fields" {% if not response or response.attending != 'yes' %}style="display: none;"{% endif %} class="space-y-4 bg-red-50 p-6 rounded-lg border border-red-200 mt-6 shadow-inner">
         <div class="text-center mb-2">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
           </svg>
         </div>
         <div>
-          <label for="persons" class="block font-bold text-center text-blue-800 mb-3">Wie viele Personen kommen?</label>
+          <label for="persons" class="block font-bold text-center text-red-800 mb-3">Wie viele Personen kommen?</label>
           <div class="flex items-center justify-center">
-            <button type="button" id="decrease" class="bg-blue-200 hover:bg-blue-300 text-blue-800 font-bold w-10 h-10 rounded-l-lg">
+            <button type="button" id="decrease" class="bg-red-200 hover:bg-red-300 text-red-800 font-bold w-10 h-10 rounded-l-lg">
               -
             </button>
             <input 
@@ -106,9 +110,9 @@
               min="1" 
               max="100"
               value="{{ response.persons if response and response.persons else '1' }}"
-              class="w-16 h-10 text-center border-y border-blue-200 text-lg font-bold"
+              class="w-16 h-10 text-center border-y border-red-200 text-lg font-bold"
               {% if response and response.attending != 'yes' %}disabled{% endif %}>
-            <button type="button" id="increase" class="bg-blue-200 hover:bg-blue-300 text-blue-800 font-bold w-10 h-10 rounded-r-lg">
+            <button type="button" id="increase" class="bg-red-200 hover:bg-red-300 text-red-800 font-bold w-10 h-10 rounded-r-lg">
               +
             </button>
           </div>
@@ -126,8 +130,8 @@
     </form>
 
     <div class="mt-8 mb-4">
-      <a href="https://www.ffw-windischletten.de" class="flex items-center justify-center text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200 group">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 text-gray-500 group-hover:text-blue-600 transition-colors duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <a href="https://www.ffw-windischletten.de" class="flex items-center justify-center text-sm font-medium text-gray-700 hover:text-red-600 transition-colors duration-200 group">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 text-gray-500 group-hover:text-red-600 transition-colors duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
         </svg>
         Zur Startseite
