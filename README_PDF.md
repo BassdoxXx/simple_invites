@@ -59,6 +59,43 @@
 3. QR-Codes werden automatisch beim Import generiert
 
 ## Technische Details
+"""
+DIN 5008 Layout-Demonstration für PDF-Einladungen
+==================================================
+
+Nach DIN 5008 Standard:
+
+Y-Position    Element
+-----------   -------
+0-44mm        Briefkopf (Logo, Absender)
+45mm          Rücksendeadresse (klein)
+50-85mm       Anschriftenfeld (Empfänger)
+105mm         *** ERSTE FALZMARKE *** -> BETREFF HIER
+110-210mm     Haupttext-Bereich (flexibel)
+210mm         *** ZWEITE FALZMARKE *** 
+215mm         QR-Code-Bereich (fest)
+
+Neue Verbesserungen:
+===================
+
+1. ✅ Betreff jetzt auf erster Falzmarke (105mm)
+   - Besseres visuelles Layout
+   - Professioneller Eindruck
+   - Mehr Platz für Haupttext
+
+2. ✅ Variable Betreffzeile konfigurierbar
+   - Neues Feld "subject_line" in Admin-Settings
+   - Standardwert: "Einladung zum 150 jährigen Feuerwehrfest"
+   - Vollständig anpassbar über Web-Interface
+
+3. ✅ Optimierte Textverteilung
+   - Mehr Raum zwischen Betreff und Text
+   - QR-Code bleibt fest bei 215mm
+   - Bessere Proportionen im Brief
+
+Das entspricht der DIN 5008 Norm und sieht professioneller aus!
+"""
+
 
 ### Neue Dateien
 

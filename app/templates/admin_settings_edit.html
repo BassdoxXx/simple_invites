@@ -5,7 +5,7 @@
 
 {% block content %}
 <div class="max-w-7xl mx-auto mt-12 bg-white shadow-lg rounded-xl p-8">
-  <h1 class="text-3xl font-bold mb-4">🔔 Einstellungen</h1>
+  <h1 class="text-3xl font-bold mb-4">Einstellungen</h1>
 
   <form method="POST" class="space-y-6 max-w-7xl">
     <!-- CSRF-Token hinzufügen -->
@@ -63,6 +63,12 @@
     
     <hr class="my-6 border-gray-300">
     
+    <div class="mb-4">
+      <label for="subject_line" class="block font-semibold mb-1">Betreffzeile</label>
+      <input type="text" id="subject_line" name="subject_line" class="w-full p-2 border rounded"
+             value="{{ subject_line }}" placeholder="z.B. Einladung zum 150 jährigen Feuerwehrfest">
+      <small class="text-gray-600">Diese Zeile erscheint als Betreff in der PDF-Einladung</small>
+    </div>
     <div class="mb-4">
       <label for="invite_header" class="block font-semibold mb-1">Einladungstext</label>
       <textarea id="invite_header" name="invite_header" rows="5" class="w-full p-2 border rounded">{{ invite_header }}</textarea>

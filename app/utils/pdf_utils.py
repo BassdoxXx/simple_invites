@@ -223,6 +223,7 @@ def add_invitation_content(pdf, invite, settings):
     # Vorbereitung: Veranstaltungsinformationen aus den Settings extrahieren
     vereins_name = settings.get("vereins_name", "")
     invite_header = settings.get("invite_header", "")
+    subject_line = settings.get("subject_line", "Einladung zum 150 jährigen Feuerwehrfest")
     contact_address = settings.get("contact_address", "Musterstraße 123, 12345 Musterstadt")
     
     # Adresse für die Rücksendeadresse vorbereiten (nur Straße und Ort)
@@ -254,11 +255,11 @@ def add_invitation_content(pdf, invite, settings):
     pdf.cell(25, 5, "Datum:", 0, 0)
     pdf.cell(30, 5, f"{datetime.now().strftime('%d.%m.%Y')}", 0, 1)
     
-    # Betreffzeile
-    pdf.set_xy(25, 85)
+    # Betreffzeile - POSITIONIERT AUF DER ERSTEN FALZMARKE (105mm)
+    pdf.set_xy(25, 105)  # Direkt auf der ersten Falzmarke
     pdf.set_font('Arial', 'B', 11)
-    pdf.cell(0, 5, "Einladung zum 150 jährigen Feuerwehrfest", 0, 1, 'L')
-    pdf.ln(6)
+    pdf.cell(0, 5, subject_line, 0, 1, 'L')
+    pdf.ln(8)  # Etwas mehr Abstand nach dem Betreff
     
     # FESTE POSITION FÜR QR-CODE-BEREICH
     QR_SECTION_Y = 215

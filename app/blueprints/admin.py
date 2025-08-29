@@ -256,6 +256,7 @@ def settings():
     # Define all settings with their keys and default values
     setting_definitions = {
         "invite_header": "",
+        "subject_line": "Einladung zum 150 jährigen Feuerwehrfest",
         "event_name": "",
         "vereins_name": "",
         "event_date": "",  # Format: YYYY-MM-DD für das Event-Datum
