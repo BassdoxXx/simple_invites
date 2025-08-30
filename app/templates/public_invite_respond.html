@@ -12,7 +12,7 @@
       </div>
 <!-- Gast-Begrüßung und Formular -->
 {% if gast_name %}
-  <h3 class="text-xl font-bold text-gray-800 text-center mb-4">Hallo <span class="text-red-600">{{ gast_name }}</span> 👋</h3>
+  <h3 class="text-xl font-bold text-gray-800 text-center mb-4">Hallo <span class="text-gray-600">{{ gast_name }}</span> 👋</h3>
 {% else %}
   <h3 class="text-xl font-bold text-gray-800 text-center mb-4">Hallo und willkommen!</h3>
 {% endif %}
@@ -22,8 +22,8 @@
         <svg viewBox="0 0 240 80" class="w-full h-full">
           <defs>
             <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="#e53e3e" />
-              <stop offset="100%" stop-color="#3182ce" />
+              <stop offset="0%" stop-color="#6b7280" />
+              <stop offset="100%" stop-color="#4b5563" />
             </linearGradient>
             <filter id="shadow" x="-0.02" y="0" width="1.04" height="1.1">
               <feOffset result="offOut" in="SourceAlpha" dx="1" dy="2" />
@@ -35,12 +35,12 @@
             Einladung
           </text>
           <!-- Dekorative Linie links -->
-          <path d="M20,55 Q50,30 70,55" stroke="#e53e3e" stroke-width="2" fill="none" />
+          <path d="M20,55 Q50,30 70,55" stroke="#6b7280" stroke-width="2" fill="none" />
           <!-- Dekorative Linie rechts -->
-          <path d="M170,55 Q190,30 220,55" stroke="#3182ce" stroke-width="2" fill="none" />
+          <path d="M170,55 Q190,30 220,55" stroke="#4b5563" stroke-width="2" fill="none" />
         </svg>
         <!-- Kleines Icon oben -->
-        <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-red-500 to-red-700 rounded-full p-1 shadow-md">
+        <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gray-600 rounded-full p-1 shadow-md">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76" />
           </svg>
@@ -122,7 +122,7 @@
       </div>
 
       <div class="mt-6">
-        <button type="submit" class="w-full bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center">
+        <button type="submit" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
           </svg>
@@ -132,7 +132,7 @@
     </form>
 
     <div class="mt-8 mb-4">
-      <a href="https://www.ffw-windischletten.de" class="flex items-center justify-center text-sm font-medium text-gray-700 hover:text-red-600 transition-colors duration-200 group">
+      <a href="https://www.ffw-windischletten.de" class="flex items-center justify-center text-sm font-medium text-gray-700 hover:text-gray-800 transition-colors duration-200 group">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 text-gray-500 group-hover:text-red-600 transition-colors duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
         </svg>
