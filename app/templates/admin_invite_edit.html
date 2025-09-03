@@ -2,7 +2,7 @@
 {% block title %}Einladung bearbeiten{% endblock %}
 
 {% block content %}
-<div class="max-w-lg mx-auto mt-10 bg-white rounded-xl shadow-xl p-8 border-4 border-gray-200">
+<div class="max-w-lg mx-auto mt-10 bg-white rounded-xl shadow-xl p-8 border-4 border-primary-200">
   <h2 class="text-2xl font-bold text-center mb-6">Einladung bearbeiten</h2>
   <form method="POST">
     <!-- CSRF-Token hinzufügen -->
@@ -10,7 +10,7 @@
     <div class="mb-6">
       <label for="verein" class="block font-semibold mb-1">Gast / Verein</label>
       <input type="text" name="verein" id="verein" value="{{ invite.verein }}" required
-        class="w-full p-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 transition" />
+        class="w-full p-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition" />
     </div>
     
     <div class="mb-6">
@@ -19,14 +19,14 @@
       <div class="mb-3">
         <label for="ansprechpartner" class="block font-semibold mb-1">Ansprechpartner</label>
         <input type="text" name="ansprechpartner" id="ansprechpartner" value="{{ invite.ansprechpartner or '' }}"
-          class="w-full p-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 transition"
+          class="w-full p-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition"
           placeholder="Vor- und Nachname" />
       </div>
       
       <div class="mb-3">
         <label for="strasse" class="block font-semibold mb-1">Straße und Hausnummer</label>
         <input type="text" name="strasse" id="strasse" value="{{ invite.strasse or '' }}"
-          class="w-full p-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 transition"
+          class="w-full p-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition"
           placeholder="z.B. Musterstraße 123" />
       </div>
       
@@ -34,14 +34,14 @@
         <div>
           <label for="plz" class="block font-semibold mb-1">PLZ</label>
           <input type="text" name="plz" id="plz" value="{{ invite.plz or '' }}"
-            class="w-full p-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 transition"
+            class="w-full p-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition"
             placeholder="z.B. 12345" />
         </div>
         
         <div>
           <label for="ort" class="block font-semibold mb-1">Ort</label>
           <input type="text" name="ort" id="ort" value="{{ invite.ort or '' }}"
-            class="w-full p-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 transition"
+            class="w-full p-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition"
             placeholder="z.B. Musterstadt" />
         </div>
       </div>
@@ -61,10 +61,10 @@
   
   <!-- Display the token as read-only information -->
   <div class="mt-6 pt-4 border-t">
-    <p class="text-sm text-gray-600">
+    <p class="text-sm text-neutral-600">
       <strong>Token:</strong> {{ invite.token }} (kann nicht geändert werden)
     </p>
-    <p class="text-sm text-gray-600 mt-1">
+    <p class="text-sm text-neutral-600 mt-1">
       <strong>QR-Code:</strong> Wird automatisch generiert
     </p>
   </div>

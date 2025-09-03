@@ -5,16 +5,16 @@
     <title>Seite nicht gefunden</title>
     <style>
         body { font-family: sans-serif; text-align: center; margin-top: 10vh; }
-        .alarm { font-size: 2.5rem; color: #d32f2f; font-weight: bold; }
-        a { color: #1976d2; text-decoration: underline; font-size: 1.2rem; }
+        .alarm { font-size: 2.5rem; color: #2563eb; font-weight: bold; }
+        a { color: #2563eb; text-decoration: underline; font-size: 1.2rem; }
     </style>
 </head>
 <body>
     <div class="flex flex-col items-center justify-center h-full py-12">
-      <h1 class="text-6xl font-bold text-red-600 mb-4">404</h1>
+      <h1 class="text-6xl font-bold text-primary-600 mb-4">404</h1>
       <h2 class="text-2xl font-bold mb-2">ALAAAAAAAAAAAAAAAAAARM!</h2>
       <p class="text-lg mb-6">Die angeforderte Seite konnte nicht gefunden werden.</p>
-      <a href="{{ url_for('public.index') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+      <a href="{{ url_for('public.index') }}" class="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-4 rounded">
         Zur Startseite
       </a>
     </div>
