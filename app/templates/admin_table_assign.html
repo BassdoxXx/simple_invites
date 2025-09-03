@@ -21,26 +21,26 @@
           type="number"
           id="tischnummer"
           name="tischnummer"
-          class="w-full p-3 border rounded focus:outline-none focus:border-gray-500"
+          class="w-full p-3 border rounded focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
           placeholder="Leer lassen für automatische Vergabe"
           min="1"
           max="{{ max_tables }}"
           value="{{ current_table }}"
         >
-        <p class="mt-2 text-gray-600 text-sm">
+        <p class="mt-2 text-neutral-600 text-sm">
           Geben Sie eine Tischnummer zwischen 1 und {{ max_tables }} ein oder lassen Sie das Feld leer für automatische Zuweisung.
         </p>
       </div>
       
       <div>
-        <p class="text-gray-600 mb-2">Bereits belegte Tische:</p>
+        <p class="text-neutral-600 mb-2">Bereits belegte Tische:</p>
         <div class="flex flex-wrap gap-2">
           {% for tisch in blocked %}
             <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm">
               {{ tisch }}
             </span>
           {% else %}
-            <span class="text-gray-500 italic">Keine Tische belegt</span>
+            <span class="text-neutral-500 italic">Keine Tische belegt</span>
           {% endfor %}
         </div>
       </div>
@@ -56,11 +56,11 @@
     <div class="mt-6 flex justify-end gap-3">
       <a 
         href="{{ url_for('admin.index') }}"
-        class="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600"
+        class="bg-neutral-500 text-white py-2 px-4 rounded hover:bg-neutral-600"
       >Abbrechen</a>
       <button
         type="submit"
-        class="bg-gray-600 text-white py-2 px-4 rounded hover:bg-gray-700"
+        class="bg-success-600 text-white py-2 px-4 rounded hover:bg-success-700"
       >Tisch zuweisen</button>
     </div>
   </form>

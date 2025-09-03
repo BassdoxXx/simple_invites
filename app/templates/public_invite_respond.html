@@ -2,19 +2,11 @@
 {% block title %}Einladung beantworten{% endblock %} 
 
 {% block guest_content %}
-      <div class="mt-6">
-        <button type="submit" class="w-full bg-success-600 hover:bg-success-700 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-          </svg>
-          Antwort speichern
-        </button>
-      </div>
 <!-- Gast-Begrüßung und Formular -->
 {% if gast_name %}
   <h3 class="text-xl font-bold text-neutral-900 text-center mb-4">Hallo <span class="text-primary-600">{{ gast_name }}</span> 👋</h3>
 {% else %}
-  <h3 class="text-xl font-bold text-gray-800 text-center mb-4">Hallo und willkommen!</h3>
+  <h3 class="text-xl font-bold text-neutral-800 text-center mb-4">Hallo und willkommen!</h3>
 {% endif %}
     <div class="flex justify-center mb-6">
       <div class="w-56 h-20 relative">
@@ -61,14 +53,14 @@
               value="yes" 
               {% if response and response.attending == 'yes' %}checked{% endif %} 
               class="hidden peer">
-            <div class="flex items-center justify-center p-2 rounded-md border-2 border-green-200 
-                        bg-gradient-to-b from-green-50 to-green-100 
-                        peer-checked:border-green-500 peer-checked:from-green-100 peer-checked:to-green-200
+            <div class="flex items-center justify-center p-2 rounded-md border-2 border-success-200 
+                        bg-gradient-to-b from-success-50 to-success-100 
+                        peer-checked:border-success-500 peer-checked:from-success-100 peer-checked:to-success-200
                         hover:shadow-sm transition-all duration-200">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-success-600 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
-              <span class="text-sm font-bold text-green-700">Ja</span>
+              <span class="text-sm font-bold text-success-700">Ja</span>
             </div>
           </label>
           
@@ -80,29 +72,29 @@
               value="no" 
               {% if response and response.attending == 'no' %}checked{% endif %}
               class="hidden peer">
-            <div class="flex items-center justify-center p-2 rounded-md border-2 border-blue-200 
-                        bg-gradient-to-b from-blue-50 to-blue-100
-                        peer-checked:border-blue-500 peer-checked:from-blue-100 peer-checked:to-blue-200
+            <div class="flex items-center justify-center p-2 rounded-md border-2 border-primary-200 
+                        bg-gradient-to-b from-primary-50 to-primary-100
+                        peer-checked:border-primary-500 peer-checked:from-primary-100 peer-checked:to-primary-200
                         hover:shadow-sm transition-all duration-200">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary-600 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
-              <span class="text-sm font-bold text-blue-700">Nein</span>
+              <span class="text-sm font-bold text-primary-700">Nein</span>
             </div>
           </label>
         </div>
       </div>
       
-      <div id="extra-fields" {% if not response or response.attending != 'yes' %}style="display: none;"{% endif %} class="space-y-4 bg-green-50 p-6 rounded-lg border border-green-200 mt-6 shadow-inner">
+      <div id="extra-fields" {% if not response or response.attending != 'yes' %}style="display: none;"{% endif %} class="space-y-4 bg-success-50 p-6 rounded-lg border border-success-200 mt-6 shadow-inner">
         <div class="text-center mb-2">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-success-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
           </svg>
         </div>
         <div>
-          <label for="persons" class="block font-bold text-center text-green-800 mb-3">Wie viele Personen kommen?</label>
+          <label for="persons" class="block font-bold text-center text-success-800 mb-3">Wie viele Personen kommen?</label>
           <div class="flex items-center justify-center">
-            <button type="button" id="decrease" class="bg-green-200 hover:bg-green-300 text-green-800 font-bold w-10 h-10 rounded-l-lg">
+            <button type="button" id="decrease" class="bg-success-200 hover:bg-success-300 text-success-800 font-bold w-10 h-10 rounded-l-lg">
               -
             </button>
             <input 
@@ -112,9 +104,9 @@
               min="1" 
               max="100"
               value="{{ response.persons if response and response.persons else '1' }}"
-              class="w-16 h-10 text-center border-y border-green-200 text-lg font-bold"
+              class="w-16 h-10 text-center border-y border-success-200 text-lg font-bold"
               {% if response and response.attending != 'yes' %}disabled{% endif %}>
-            <button type="button" id="increase" class="bg-green-200 hover:bg-green-300 text-green-800 font-bold w-10 h-10 rounded-r-lg">
+            <button type="button" id="increase" class="bg-success-200 hover:bg-success-300 text-success-800 font-bold w-10 h-10 rounded-r-lg">
               +
             </button>
           </div>
@@ -122,7 +114,7 @@
       </div>
 
       <div class="mt-6">
-        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center">
+        <button type="submit" class="w-full bg-success-600 hover:bg-success-700 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
           </svg>
@@ -132,8 +124,8 @@
     </form>
 
     <div class="mt-8 mb-4">
-      <a href="https://www.ffw-windischletten.de" class="flex items-center justify-center text-sm font-medium text-gray-700 hover:text-gray-800 transition-colors duration-200 group">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 text-gray-500 group-hover:text-red-600 transition-colors duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <a href="https://www.ffw-windischletten.de" class="flex items-center justify-center text-sm font-medium text-neutral-700 hover:text-neutral-800 transition-colors duration-200 group">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 text-neutral-500 group-hover:text-red-600 transition-colors duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
         </svg>
         Zur Startseite

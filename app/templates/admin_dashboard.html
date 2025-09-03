@@ -33,19 +33,19 @@
 <div class="mt-8 mb-8">
   <h1 class="text-3xl font-bold mb-4">Dashboard-Statistiken</h1>
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
-    <div class="bg-blue-600 text-white p-4 rounded-lg shadow">
+    <div class="bg-primary-600 text-white p-4 rounded-lg shadow">
       <h5 class="text-lg font-semibold">Einladungen</h5>
       <p class="text-3xl font-bold">{{ total_invites }}</p>
     </div>
-    <div class="bg-green-600 text-white p-4 rounded-lg shadow">
+    <div class="bg-success-600 text-white p-4 rounded-lg shadow">
       <h5 class="text-lg font-semibold">Zusagen</h5>
       <p class="text-3xl font-bold">{{ response_count }}</p>
     </div>
-    <div class="bg-cyan-600 text-white p-4 rounded-lg shadow">
+    <div class="bg-primary-500 text-white p-4 rounded-lg shadow">
       <h5 class="text-lg font-semibold">Personen</h5>
       <p class="text-3xl font-bold">{{ total_persons }}</p>
     </div>
-    <div class="bg-yellow-500 text-white p-4 rounded-lg shadow">
+    <div class="bg-neutral-600 text-white p-4 rounded-lg shadow">
       <h5 class="text-lg font-semibold">Tische belegt</h5>
       <p class="text-3xl font-bold">{{ used_tables }} / {{ max_tables }}</p>
     </div>
@@ -59,12 +59,12 @@
 
 <!-- Rest des Codes bleibt unverändert... -->
 <div
-  class="mb-6 p-4 bg-blue-50 rounded-xl shadow flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+  class="mb-6 p-4 bg-primary-50 rounded-xl shadow flex flex-col md:flex-row md:items-center md:justify-between gap-4"
 >
   <div>
     <span class="font-bold text-lg text-purple-700">👑 Meiste Zusagen:</span>
     <span class="font-extrabold text-xl">{{ top_verein }}</span>
-    <span class="ml-2 text-gray-700">({{ top_persons }} Personen)</span>
+    <span class="ml-2 text-neutral-600">({{ top_persons }} Personen)</span>
   </div>
 </div>
 
@@ -92,7 +92,7 @@
   <button
     id="csvExportBtn"
     type="button"
-    class="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+    class="bg-success-600 text-white py-2 px-4 rounded hover:bg-success-700 disabled:bg-neutral-400 disabled:cursor-not-allowed"
     disabled
   >
     CSV Export
@@ -100,7 +100,7 @@
   
   <button type="button" 
     id="pdfExportBtn"
-    class="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+    class="bg-success-600 text-white py-2 px-4 rounded hover:bg-success-700 disabled:bg-neutral-400 disabled:cursor-not-allowed"
     disabled
   >
     Einladung als PDF
@@ -138,7 +138,7 @@
       {% for invite in invites %}
       <tr class="border-t searchable-row">
         <td class="p-3 text-center">
-          <input type="checkbox" name="selected_invites" value="{{ invite.token }}" class="invite-checkbox form-checkbox h-4 w-4 text-blue-600">
+          <input type="checkbox" name="selected_invites" value="{{ invite.token }}" class="invite-checkbox form-checkbox h-4 w-4 text-primary-600">
         </td>
         <td class="p-3 font-medium whitespace-nowrap max-w-xs sm:max-w-none">
           {{ invite.verein }}
@@ -158,12 +158,12 @@
         <td class="p-3 text-sm whitespace-nowrap">
           <a
             href="{{ invite.link }}"
-            class="text-blue-600 underline hover:text-blue-800"
+            class="text-primary-600 underline hover:text-primary-800"
             target="_blank"
           >Link öffnen</a>
           <button
             type="button"
-            class="ml-2 text-gray-500 hover:text-blue-700"
+            class="ml-2 text-neutral-500 hover:text-primary-700"
             data-link="{{ invite.link | e }}"
             onclick="copyToClipboard(this)"
             title="Link kopieren"
@@ -176,9 +176,9 @@
         <td class="p-3 font-semibold">
           {% if res %}
             {% if res.attending == 'yes' %}
-              <span class="text-green-600">Ja</span>
+              <span class="text-success-600">Ja</span>
             {% elif res.attending == 'no' %}
-              <span class="text-blue-600">Nein</span>
+              <span class="text-primary-600">Nein</span>
             {% else %}
               {{ res.attending }}
             {% endif %}
@@ -197,14 +197,14 @@
           <div class="flex justify-center gap-2 items-center">
             <a
               href="{{ url_for('admin.edit_invite', token=invite.token) }}"
-              class="bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-sm transition-all text-sm flex items-center justify-center h-12 px-6"
+              class="bg-success-600 hover:bg-success-700 text-white font-semibold rounded-lg shadow-sm transition-all text-sm flex items-center justify-center h-12 px-6"
               style="min-width: 90px;"
               title="Einladung bearbeiten"
             >Bearbeiten</a>
             {% if enable_tables == "true" %}
             <a
               href="{{ url_for('admin.assign_table', token=invite.token) }}"
-              class="bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg shadow-sm transition-all text-sm flex items-center justify-center h-12 px-6"
+              class="bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg shadow-sm transition-all text-sm flex items-center justify-center h-12 px-6"
               style="min-width: 90px;"
               title="Tisch manuell zuweisen"
             >Tisch zuweisen</a>
@@ -223,7 +223,7 @@
               />
               <button
                 type="submit"
-                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm transition-all text-sm flex items-center justify-center h-12 px-6"
+                class="bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg shadow-sm transition-all text-sm flex items-center justify-center h-12 px-6"
                 style="min-width: 90px;"
                 title="Einladung löschen"
               >
@@ -251,11 +251,11 @@
           Tisch {{ tisch_nummer }}
           <span class="float-right text-sm py-1 px-2 rounded-full 
             {% if tisch_data.belegt == max_persons_per_table %}
-              bg-blue-100 text-blue-800
+              bg-primary-100 text-primary-800
             {% elif tisch_data.belegt > max_persons_per_table * 0.7 %}
               bg-yellow-100 text-yellow-800
             {% else %}
-              bg-green-100 text-green-800
+              bg-success-100 text-success-800
             {% endif %}">
             {{ tisch_data.belegt }}/{{ max_persons_per_table }}
           </span>

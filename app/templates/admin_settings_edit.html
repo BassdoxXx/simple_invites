@@ -13,27 +13,27 @@
 
     <div>
       <label for="vereins_name" class="block font-semibold mb-1">Verein/Organisation (Gastgeber)</label>
-      <input type="text" id="vereins_name" name="vereins_name" class="w-full p-2 border rounded"
+      <input type="text" id="vereins_name" name="vereins_name" class="w-full p-2 border rounded focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
              value="{{ vereins_name }}">
     </div>
     <div>
       <label for="event_name" class="block font-semibold mb-1">Veranstaltungsname</label>
-      <input type="text" id="event_name" name="event_name" class="w-full p-2 border rounded"
+      <input type="text" id="event_name" name="event_name" class="w-full p-2 border rounded focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
              value="{{ event_name }}">
     </div>
     <div>
       <label for="event_date" class="block font-semibold mb-1">Event-Datum</label>
-      <input type="date" id="event_date" name="event_date" class="w-full p-2 border rounded"
+      <input type="date" id="event_date" name="event_date" class="w-full p-2 border rounded focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
              value="{{ event_date }}">
     </div>
     <div>
       <label for="event_time" class="block font-semibold mb-1">Uhrzeit</label>
-      <input type="text" id="event_time" name="event_time" class="w-full p-2 border rounded"
+      <input type="text" id="event_time" name="event_time" class="w-full p-2 border rounded focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
              value="{{ event_time }}" placeholder="z.B. 19:00 Uhr">
     </div>
     <div>
       <label for="event_location" class="block font-semibold mb-1">Veranstaltungsort</label>
-      <input type="text" id="event_location" name="event_location" class="w-full p-2 border rounded"
+      <input type="text" id="event_location" name="event_location" class="w-full p-2 border rounded focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
              value="{{ event_location }}" placeholder="z.B. Vereinsheim">
     </div>
     
@@ -42,22 +42,22 @@
     
     <div>
       <label for="contact_email" class="block font-semibold mb-1">E-Mail-Adresse</label>
-      <input type="email" id="contact_email" name="contact_email" class="w-full p-2 border rounded"
+      <input type="email" id="contact_email" name="contact_email" class="w-full p-2 border rounded focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
              value="{{ contact_email }}" placeholder="z.B. info@verein.de">
     </div>
     <div>
       <label for="contact_address" class="block font-semibold mb-1">Adresse (erscheint im Briefkopf)</label>
-      <input type="text" id="contact_address" name="contact_address" class="w-full p-2 border rounded"
+      <input type="text" id="contact_address" name="contact_address" class="w-full p-2 border rounded focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
              value="{{ contact_address }}" placeholder="z.B. Musterstraße 123, 12345 Musterstadt">
     </div>
     <div>
       <label for="contact_phone" class="block font-semibold mb-1">Telefonnummer</label>
-      <input type="text" id="contact_phone" name="contact_phone" class="w-full p-2 border rounded"
+      <input type="text" id="contact_phone" name="contact_phone" class="w-full p-2 border rounded focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
              value="{{ contact_phone }}" placeholder="z.B. +49 123 45678">
     </div>
     <div>
       <label for="website" class="block font-semibold mb-1">Website</label>
-      <input type="text" id="website" name="website" class="w-full p-2 border rounded"
+      <input type="text" id="website" name="website" class="w-full p-2 border rounded focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
              value="{{ website }}" placeholder="z.B. www.verein.de">
     </div>
     
@@ -65,37 +65,37 @@
     
     <div class="mb-4">
       <label for="subject_line" class="block font-semibold mb-1">Betreffzeile</label>
-      <input type="text" id="subject_line" name="subject_line" class="w-full p-2 border rounded"
+      <input type="text" id="subject_line" name="subject_line" class="w-full p-2 border rounded focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
              value="{{ subject_line }}" placeholder="z.B. Einladung zum 150 jährigen Feuerwehrfest">
-      <small class="text-gray-600">Diese Zeile erscheint als Betreff in der PDF-Einladung</small>
+      <small class="text-neutral-600">Diese Zeile erscheint als Betreff in der PDF-Einladung</small>
     </div>
     <div class="mb-4">
       <label for="invite_header" class="block font-semibold mb-1">Einladungstext</label>
-      <textarea id="invite_header" name="invite_header" rows="5" class="w-full p-2 border rounded">{{ invite_header }}</textarea>
+      <textarea id="invite_header" name="invite_header" rows="5" class="w-full p-2 border rounded focus:border-primary-500 focus:ring-1 focus:ring-primary-500">{{ invite_header }}</textarea>
     </div>
     <div class="mb-4">
       <label for="max_tables" class="block font-semibold mb-1">Maximale Anzahl Tische</label>
-      <input type="number" id="max_tables" name="max_tables" class="w-full p-2 border rounded"
+      <input type="number" id="max_tables" name="max_tables" class="w-full p-2 border rounded focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
              value="{{ max_tables }}" min="1" max="1000">
     </div>
     <div class="mb-4">
       <label for="max_persons_per_table" class="block font-semibold mb-1">Max. Personen pro Tisch</label>
       <input type="number" id="max_persons_per_table" name="max_persons_per_table" 
-             class="w-full p-2 border rounded" value="{{ max_persons_per_table }}" min="1" max="50">
+             class="w-full p-2 border rounded focus:border-primary-500 focus:ring-1 focus:ring-primary-500" value="{{ max_persons_per_table }}" min="1" max="50">
     </div>
     <div class="flex items-center mb-4">
       <input type="checkbox" id="enable_tables" name="enable_tables" value="true"
-             {% if enable_tables == "true" %}checked{% endif %} class="mr-2">
+             {% if enable_tables == "true" %}checked{% endif %} class="mr-2 text-primary-600">
       <label for="enable_tables">Tischverwaltung aktivieren</label>
-      <span class="ml-2 text-sm text-gray-500">(Wird automatisch angewendet, wenn aktiviert)</span>
+      <span class="ml-2 text-sm text-neutral-500">(Wird automatisch angewendet, wenn aktiviert)</span>
     </div>
-    <button type="submit" class="bg-gray-600 text-white py-2 px-4 rounded hover:bg-gray-700">
+    <button type="submit" class="bg-success-600 text-white py-2 px-4 rounded hover:bg-success-700">
       Einstellungen speichern
     </button>
   </form>
 
   <div class="mt-6">
-    <a href="{{ url_for('admin.index') }}" class="bg-gray-600 text-white py-2 px-4 rounded hover:bg-gray-700">&larr; Zurück zur Übersicht</a>
+    <a href="{{ url_for('admin.index') }}" class="bg-neutral-600 text-white py-2 px-4 rounded hover:bg-neutral-700">&larr; Zurück zur Übersicht</a>
   </div>
 </div>
 {% endblock %}
