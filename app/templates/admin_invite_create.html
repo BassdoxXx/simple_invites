@@ -4,7 +4,7 @@
               id="ansprechpartner"
               name="ansprechpartner"
               value="{{ invite.ansprechpartner if invite else '' }}"
-              class="w-full p-3 border rounded focus:outline-none focus:border-gray-500"
+              class="w-full p-3 border rounded focus:outline-none focus:border-blue-500"
               placeholder="Vor- und Nachname"
             />ellen{% endblock %}
 
@@ -13,7 +13,7 @@
 
 {% if vereins_name %}
 <div class="mb-8">
-  <h2 class="text-2xl font-bold text-gray-700">{{ vereins_name }}</h2>
+  <h2 class="text-2xl font-bold text-blue-700">{{ vereins_name }}</h2>
 </div>
 {% endif %}
 
@@ -33,7 +33,7 @@
           id="verein"
           name="verein"
           value="{{ invite.verein if invite else '' }}"
-          class="w-full p-3 border rounded focus:outline-none focus:border-gray-500"
+          class="w-full p-3 border rounded focus:outline-none focus:border-blue-500"
           required
         />
         <p class="mt-1 text-xs text-gray-600">Name des Vereins oder der Gruppe, die eingeladen werden soll.</p>
@@ -45,7 +45,7 @@
           id="token"
           name="token"
           value="{{ invite.token if invite else '' }}"
-          class="w-full p-3 border rounded focus:outline-none focus:border-gray-500"
+          class="w-full p-3 border rounded focus:outline-none focus:border-blue-500"
           placeholder="Leer lassen für automatische Generierung"
           pattern="[a-z0-9]{8}"
           title="Token muss aus 8 Zeichen bestehen (Kleinbuchstaben, Zahlen)"
@@ -80,7 +80,7 @@
               id="strasse"
               name="strasse"
               value="{{ invite.strasse if invite else '' }}"
-              class="w-full p-3 border rounded focus:outline-none focus:border-gray-500"
+              class="w-full p-3 border rounded focus:outline-none focus:border-blue-500"
               placeholder="z.B. Musterstraße 123"
             />
           </div>
@@ -92,7 +92,7 @@
               id="plz"
               name="plz"
               value="{{ invite.plz if invite else '' }}"
-              class="w-full p-3 border rounded focus:outline-none focus:border-gray-500"
+              class="w-full p-3 border rounded focus:outline-none focus:border-blue-500"
               placeholder="z.B. 12345"
             />
           </div>
@@ -104,7 +104,7 @@
               id="ort"
               name="ort"
               value="{{ invite.ort if invite else '' }}"
-              class="w-full p-3 border rounded focus:outline-none focus:border-gray-500"
+              class="w-full p-3 border rounded focus:outline-none focus:border-blue-500"
               placeholder="z.B. Musterstadt"
             />
           </div>
@@ -115,13 +115,13 @@
     <div class="mt-8 flex justify-end gap-3">
       <a
         href="{{ url_for('admin.index') }}"
-        class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded"
+        class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
       >
         Abbrechen
       </a>
       <button
         type="submit"
-        class="bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded"
+        class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded"
       >
         {% if invite %}Speichern{% else %}Erstellen{% endif %}
       </button>
@@ -158,7 +158,7 @@
           id="csv_file"
           name="csv_file"
           accept=".csv"
-          class="w-full p-3 border rounded focus:outline-none focus:border-gray-500"
+          class="w-full p-3 border rounded focus:outline-none focus:border-blue-500"
           required
         />
       </div>

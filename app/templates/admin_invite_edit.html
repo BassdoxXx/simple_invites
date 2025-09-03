@@ -10,7 +10,7 @@
     <div class="mb-6">
       <label for="verein" class="block font-semibold mb-1">Gast / Verein</label>
       <input type="text" name="verein" id="verein" value="{{ invite.verein }}" required
-        class="w-full p-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-gray-500 transition" />
+        class="w-full p-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 transition" />
     </div>
     
     <div class="mb-6">
@@ -19,14 +19,14 @@
       <div class="mb-3">
         <label for="ansprechpartner" class="block font-semibold mb-1">Ansprechpartner</label>
         <input type="text" name="ansprechpartner" id="ansprechpartner" value="{{ invite.ansprechpartner or '' }}"
-          class="w-full p-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-gray-500 transition"
+          class="w-full p-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 transition"
           placeholder="Vor- und Nachname" />
       </div>
       
       <div class="mb-3">
         <label for="strasse" class="block font-semibold mb-1">Straße und Hausnummer</label>
         <input type="text" name="strasse" id="strasse" value="{{ invite.strasse or '' }}"
-          class="w-full p-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-gray-500 transition"
+          class="w-full p-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 transition"
           placeholder="z.B. Musterstraße 123" />
       </div>
       
@@ -34,28 +34,28 @@
         <div>
           <label for="plz" class="block font-semibold mb-1">PLZ</label>
           <input type="text" name="plz" id="plz" value="{{ invite.plz or '' }}"
-            class="w-full p-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-gray-500 transition"
+            class="w-full p-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 transition"
             placeholder="z.B. 12345" />
         </div>
         
         <div>
           <label for="ort" class="block font-semibold mb-1">Ort</label>
           <input type="text" name="ort" id="ort" value="{{ invite.ort or '' }}"
-            class="w-full p-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-gray-500 transition"
+            class="w-full p-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 transition"
             placeholder="z.B. Musterstadt" />
         </div>
       </div>
     </div>
     
     <button type="submit"
-      class="w-full bg-gray-600 hover:bg-gray-700 text-white py-3 px-4 rounded-xl font-bold shadow-lg hover:scale-105 transition">
+      class="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-xl font-bold shadow-lg hover:scale-105 transition">
       Änderungen speichern
     </button>
     <div class="flex justify-between mt-4">
       <a href="{{ url_for('admin.index') }}"
-        class="text-gray-600 hover:underline">Zurück zur Übersicht</a>
+        class="text-blue-600 hover:underline">Zurück zur Übersicht</a>
       <a href="{{ url_for('admin.assign_table', token=invite.token) }}" 
-        class="text-gray-600 hover:underline">Tisch zuweisen</a>
+        class="text-blue-600 hover:underline">Tisch zuweisen</a>
     </div>
   </form>
   
