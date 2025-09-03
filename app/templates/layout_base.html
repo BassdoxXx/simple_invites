@@ -8,16 +8,36 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Optional: Tailwind Konfiguration -->
+    <!-- Professional Color Configuration Based on UX Research -->
     <script>
       tailwind.config = {
         theme: {
           extend: {
             colors: {
-              primary: '#3b82f6',
-              secondary: '#10b981',
-              accent: '#f59e0b',
-              warm: '#f97316',
+              // Professional Blue Theme - High Contrast & Accessibility
+              primary: {
+                50: '#eff6ff',   // Very light blue backgrounds
+                100: '#dbeafe',  // Light blue backgrounds
+                500: '#3b82f6',  // Main blue (primary actions)
+                600: '#2563eb',  // Darker blue (hover states)
+                700: '#1d4ed8',  // Dark blue (active states)
+              },
+              // Clean Success Green (no gradients)
+              success: {
+                50: '#ecfdf5',   // Light green backgrounds
+                100: '#d1fae5',  // Success message backgrounds
+                600: '#059669',  // Main success green
+                700: '#047857',  // Darker success green
+              },
+              // Professional Grays
+              neutral: {
+                50: '#f9fafb',   // Card backgrounds
+                100: '#f3f4f6',  // Section backgrounds
+                200: '#e5e7eb',  // Borders
+                500: '#6b7280',  // Secondary text
+                600: '#4b5563',  // Primary text
+                900: '#111827',  // Headings
+              }
             }
           }
         }
@@ -28,7 +48,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-gray-100 text-gray-900 min-h-screen flex flex-col">
+<body class="bg-white text-neutral-600 min-h-screen flex flex-col">
 
   {% block navigation %}{% endblock %}
 

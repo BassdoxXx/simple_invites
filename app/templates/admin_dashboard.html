@@ -4,19 +4,19 @@
 
 {% if vereins_name %}
 <div class="mb-2">
-  <h2 class="text-2xl font-bold text-blue-700">{{ vereins_name }}</h2>
+  <h2 class="text-2xl font-bold text-primary-600">{{ vereins_name }}</h2>
 </div>
 {% endif %}
 
 <!-- Event Countdown -->
 
 {% if days_until_event is not none and event_name %}
-  <div class="bg-gradient-to-r from-blue-500 to-green-500 text-white p-4 rounded-lg shadow mb-8 text-center">
+  <div class="bg-primary-600 text-white p-4 rounded-lg shadow mb-8 text-center">
     {% if event_name %}
-        <p class="text-xl font-extrabold mt-2 text-green-300">{{ event_name }}</p>
+        <p class="text-xl font-semibold mt-2 text-primary-100">{{ event_name }}</p>
     {% endif %}
     {% if vereins_name %}
-        <p class="text-xl font-extrabold mt-2 text-green-300">{{ vereins_name }}</p>
+        <p class="text-xl font-semibold mt-2 text-primary-100">{{ vereins_name }}</p>
     {% endif %}
     {% if days_until_event > 0 %}
       <p class="text-3xl font-extrabold mt-2">Noch {{ days_until_event }} {{ 'Tage' if days_until_event != 1 else 'Tag' }} bis zum Event!</p>

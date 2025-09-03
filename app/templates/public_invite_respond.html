@@ -3,7 +3,7 @@
 
 {% block guest_content %}
       <div class="mt-6">
-        <button type="submit" class="w-full bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center">
+        <button type="submit" class="w-full bg-success-600 hover:bg-success-700 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
           </svg>
@@ -12,7 +12,7 @@
       </div>
 <!-- Gast-Begrüßung und Formular -->
 {% if gast_name %}
-  <h3 class="text-xl font-bold text-blue-800 text-center mb-4">Hallo <span class="text-blue-600">{{ gast_name }}</span> 👋</h3>
+  <h3 class="text-xl font-bold text-neutral-900 text-center mb-4">Hallo <span class="text-primary-600">{{ gast_name }}</span> 👋</h3>
 {% else %}
   <h3 class="text-xl font-bold text-gray-800 text-center mb-4">Hallo und willkommen!</h3>
 {% endif %}
@@ -40,7 +40,7 @@
           <path d="M170,55 Q190,30 220,55" stroke="#4b5563" stroke-width="2" fill="none" />
         </svg>
         <!-- Kleines Icon oben -->
-        <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-blue-600 rounded-full p-1 shadow-md">
+        <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-primary-600 rounded-full p-1 shadow-md">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76" />
           </svg>
